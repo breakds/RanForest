@@ -119,7 +119,7 @@ namespace ran_forest
         every->write( out );
       }
     }
-    
+
   public:
     /* ---------- public I/Os ---------- */
     void write( std::string filename )
