@@ -1,19 +1,34 @@
+/* ------------------------------------------------------------------------------------------+
+ * This is free and unencumbered software released into the public domain (Unlicense)        |
+ *                                                                                           |
+ * Source: SimpleKernel.hpp                                                                  |
+ * Author: BreakDS                                                                           |
+ * Date: Tue Feb  5 13:42:53 CST 2013                                                        |
+ * Description: This file implement the simple kernel for splitting a tree node              |
+ * ------------------------------------------------------------------------------------------+
+ */
+
 #pragma once
+#include "../Aux/Revolver.hpp"
+#include "LLPack/utils/candy.hpp"
 
 namespace ran_forest
 {
-  template <typename T, typename splitter>
+  template <typename feature_t, template<typename> class splitter>
   class SimpleKernel
   {
   public:
-    typedef T dataType;
-
-
+    typedef typename ElementOf<feature_t>::type dataType;
 
     struct Options
     {
-      int maxDepth;
-      int dim;
+      int maxDepth; // max depth for the forest
+      int dim; // dimension of feature
+      int numHypo; // number of hypothesis
+      int stopNum; // stop splitting when a node contains elements less then stopNum
+      dataType converge; // criteria for convergence
+
+      Options() : maxDepth(-1), dim(1), numHypo(30), stopNum(5), converge(0) {}
     }; 
     
     class State
@@ -26,46 +41,17 @@ namespace ran_forest
 
       State( int *i, int l, int s )
         : idx(i), len(l), shuffler(s), depth(0) {}
+
+      State( int *i, int l, const Shuffler& s, int d )
+        : idx(i), len(l), shuffler(s), depth(d) {}
     };
 
-    class Judger
-    {
-    public:
-      dataType th;
-      int component;
+    const std::vector<feature_t> &dataPoints;
+    Options options;
 
-      inline void write( FILE *out )
-      {
-        fwrite( &th, sizeof(dataType), 1, out );
-        fwrite( &component, sizeof(int), 1, out );
-      }
-
-      inline void read( FILE *in )
-      {
-        fread( &th, sizeof(dataType), 1, in );
-        fread( &component, sizeof(int), 1, in );
-      }
-      
-      inline int operator()( const typename FeatImage<T>::PatchProxy &p ) const
-      {
-        if ( p(component) < th ) return 0;
-        return 1;
-      }
-
-      inline int operator()( const T* p ) const
-      {
-        if ( p[component] < th ) return 0;
-        return 1;
-      }
-    };
-
-    // Kernel Parameters
-    static int numHypo;
-    static int stopNum;
-    static typename Generalized<dataType>::type converge;
-
-    static int split( const std::vector<typename FeatImage<T>::PatchProxy> &list, State& state,
-                      Judger &judger, int max_depth = -1 )
+    SimpleKernel( const std::vector<feature_t>& d, Options o ) : dataPoints(d), options(o) {}
+    
+    std::vector<int> split( State& state, splitter<dataType> &judger )
     {
       /* exception code:
        * -1 = too few patches within a node
@@ -74,35 +60,49 @@ namespace ran_forest
        * -4, -5 = invalid split (totally unbalanced split)
        * -6 = max depth reached
        */
+
+      std::vector<int> partition(3);
+      partition[0] = 0;
+      partition[2] = state.len;
       
-      if ( state.len <= stopNum ) {
-        return -1;
+      
+      if ( state.len <= options.stopNum ) {
+        partition[0] = -1;
+        return partition;
       }
       if ( 0 == state.shuffler.Number() ) {
-        return -2;
+        partition[0] = -2;
+        return partition;
       }
 
-      if ( max_depth == state.depth ) {
-        return -6;
+      if ( options.maxDepth == state.depth ) {
+        partition[0] = -6;
+        return partition;
       }
 
       state.shuffler.ResetShuffle();
       
       int trial = 0;
-      uint c[numHypo];
-      dataType th[numHypo];
-      while ( SHUFFLER_ERROR != ( c[trial] = state.shuffler.Next() ) && trial < numHypo ) {
-        typename Generalized<T>::type min = list[state.idx[0]](c[trial]);
-        typename Generalized<T>::type max = list[state.idx[0]](c[trial]);
+      uint c[options.numHypo];
+      dataType th[options.numHypo];
+      // debugging:
+      printf( "----------\n" );
+      
+      while ( SHUFFLER_ERROR != ( c[trial] = state.shuffler.Next() ) && trial < options.numHypo ) {
+        // debugging:
+        state.shuffler.show();
+        
+        typename Generalized<dataType>::type min = dataPoints[state.idx[0]][c[trial]];
+        typename Generalized<dataType>::type max = dataPoints[state.idx[0]][c[trial]];
         for ( int i=1; i<state.len; i++ ) {
-          if ( list[state.idx[i]](c[trial]) > max ) {
-            max = list[state.idx[i]](c[trial]);
-          } else if ( list [state.idx[i]](c[trial]) < min ) {
-            min = list[state.idx[i]](c[trial]);
+          if ( dataPoints[state.idx[i]][c[trial]] > max ) {
+            max = dataPoints[state.idx[i]][c[trial]];
+          } else if ( dataPoints [state.idx[i]][c[trial]] < min ) {
+            min = dataPoints[state.idx[i]][c[trial]];
           }
         }
 
-        if ( max - min < converge ) {
+        if ( max - min < options.converge ) {
           state.shuffler.Disqualify();
         } else {
           dataType range = max - min;
@@ -112,7 +112,8 @@ namespace ran_forest
       }
       
       if ( 0 == trial ) {
-        return -3;
+        partition[0] = -3;
+        return partition;
       }
 
       int minDiff = -1;
@@ -120,7 +121,7 @@ namespace ran_forest
         int leftNum = 0;
         int rightNum = 0;
         for ( int i=0; i<state.len; i++ ) {
-          if ( list[state.idx[i]](c[t]) < th[t] ) {
+          if ( dataPoints[state.idx[i]][c[t]] < th[t] ) {
             leftNum++;
           } else {
             rightNum++;
@@ -134,16 +135,18 @@ namespace ran_forest
       }
 
       if ( -1 == minDiff ) {
-        return -4;
+        partition[0] = -4;
+        return partition;
       }
 
       if ( state.len == minDiff ) {
-        return -5;
+        partition[0] = -5;
+        return partition;
       }
       
       int right = -1;
       for ( int i=0; i<state.len; i++ ) {
-        if ( 0 == judger( list[state.idx[i]] ) ) {
+        if ( 0 == judger( dataPoints[state.idx[i]] ) ) {
           right++;
           int tmp = state.idx[right];
           state.idx[right] = state.idx[i];
@@ -151,26 +154,10 @@ namespace ran_forest
         }
       }
 
-      return right + 1;
-      
+      partition[1] = right + 1;
+      return partition;
     }
   };
-
-  template <typename T>
-  int SimpleKernel<T>::numHypo = 10;
-
-  template <typename T>
-  int SimpleKernel<T>::stopNum = 1;
-
-  template <>
-  double SimpleKernel<float>::converge = 0.001;
-
-  template <>
-  double SimpleKernel<double>::converge = 0.001;
-
-  template <>
-  int SimpleKernel<unsigned char>::converge = 10;
-
 }  
 
   
