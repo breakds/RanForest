@@ -21,10 +21,11 @@ namespace ran_forest
       fread( &component, sizeof(int), 1, in );
     }
 
-    template <typename T>
-    inline int operator()( T p ) const
+    template <typename feature_t>
+    inline int operator()( const feature_t& p ) const
     {
-      // TODO: check element type of p
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
       if ( p[component] < th ) return 0;
       return 1;
     }

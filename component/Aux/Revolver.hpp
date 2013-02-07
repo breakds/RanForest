@@ -41,6 +41,12 @@ public:
     }
   }
 
+  inline Shuffler( Shuffler &&other ) 
+  {
+    size = other.size;
+    pool.swap( other.pool );
+  }
+
   inline void Reset( const vector<int> &init ) 
   {
     pool.clear();

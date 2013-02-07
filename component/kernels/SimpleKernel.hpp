@@ -44,6 +44,14 @@ namespace ran_forest
 
       State( int *i, int l, const Shuffler& s, int d )
         : idx(i), len(l), shuffler(s), depth(d) {}
+
+      State( State&& other )
+      {
+        idx = other.idx;
+        len = other.len;
+        depth = other.depth;
+        shuffler = std::move( other.shuffler );
+      }
     };
 
     const std::vector<feature_t> &dataPoints;
@@ -85,13 +93,8 @@ namespace ran_forest
       int trial = 0;
       uint c[options.numHypo];
       dataType th[options.numHypo];
-      // debugging:
-      printf( "----------\n" );
       
       while ( SHUFFLER_ERROR != ( c[trial] = state.shuffler.Next() ) && trial < options.numHypo ) {
-        // debugging:
-        state.shuffler.show();
-        
         typename Generalized<dataType>::type min = dataPoints[state.idx[0]][c[trial]];
         typename Generalized<dataType>::type max = dataPoints[state.idx[0]][c[trial]];
         for ( int i=1; i<state.len; i++ ) {

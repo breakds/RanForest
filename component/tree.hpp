@@ -33,34 +33,21 @@ namespace ran_forest
     {
     public:
       Tree<dataType,splitter> *node;
-      int leafID;
+      std::vector<int> store;
+      
+      NodeInfo() : node(nullptr), store() {}
 
-      NodeInfo() : node(nullptr), leafID(-1) {}
+      explicit NodeInfo( NodeInfo&& other )
+      {
+        node = other.node;
+        store.swap( other.store );
+      }
 
       inline int GetNodeID()
       {
         return node->nodeID;
       }
     };
-
-    class LeafInfo
-    {
-    private:
-      std::vector<int> store;
-    public:
-      LeafInfo() : store(0) {}
-
-      inline const int& operator[]( int i )
-      {
-        return store[i];
-      }
-
-      inline void push_back( int e )
-      {
-        store.push_back( e );
-      }
-    };
-
     
   private:
     std::vector<std::unique_ptr< Tree<dataType,splitter> > > child;
@@ -76,7 +63,7 @@ namespace ran_forest
     {
       return q.front();
     }
-
+    
     // fetch next from working list, depth first version
     template <SplittingOrder order, typename T>
     inline T& fetch( std::deque<T> &q, ENABLE_IF(DFS==order) )
@@ -109,14 +96,16 @@ namespace ran_forest
 
     template <template <typename,template <typename> class> class kernel, SplittingOrder order = DFS, typename feature_t>
     void grow( const std::vector<feature_t>& dataPoints, // data points
-          std::vector<int> &idx,
-          std::vector<NodeInfo> &nodes,
-          std::vector<LeafInfo> &leaves,
-          typename kernel<feature_t,splitter>::Options options )
+               std::vector<int> &idx,
+               std::vector<NodeInfo> &nodes,
+               typename kernel<feature_t,splitter>::Options options )
     {
 
+
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      
       typedef kernel<feature_t,splitter> kernelType;
-      // TODO: static_assert feature_t's element should have the same type as dataType
       std::deque<std::pair<Tree<dataType,splitter>*,typename kernelType::State> > working_list;
 
       kernelType core( dataPoints, options );
@@ -124,33 +113,25 @@ namespace ran_forest
       // push the root into the queue
       working_list.push_back( std::make_pair( this,
                                               typename kernelType::State( &idx[0],
-                                                                          static_cast<int>( options.dim ),
+                                                                          static_cast<int>( idx.size() ),
                                                                           options.dim ) ) );
 
       // initialize containers
       nodes.clear();
-      leaves.clear();
       
       while ( !working_list.empty() ) {
         Tree<dataType,splitter> *node = fetch<order>(working_list).first;
-        typename kernelType::State &state = fetch<order>(working_list).second;
+        typename kernelType::State state = std::move( fetch<order>(working_list).second );
         pop<order>( working_list );
-
-
+                  
         // emplace the current node
         node->nodeID = static_cast<int>( nodes.size() );
-        nodes.emplace( nodes.end() );
+        nodes.push_back( NodeInfo() );
         nodes.back().node = this;
         
         // split
-
-        // debugging:
-        printf( "---------- nodeID = %d ----------\n", node->nodeID );
-        state.shuffler.show();
         std::vector<int> partition = std::move( core.split( state, node->judger ) );
-        state.shuffler.show();
-
-
+        
         if ( 0 == partition[0] ) {
           /* internal node */
           int branches = static_cast<int>( partition.size() )-1;
@@ -162,28 +143,19 @@ namespace ran_forest
                                                                                 partition[i+1] - partition[i],
                                                                                 state.shuffler,
                                                                                 state.depth + 1 ) ) );
-            printf( "len: %d\n", working_list.back().second.len );
-            working_list.back().second.shuffler.show();
           }
         } else {
           /* leaf node */
-          nodes.back().leafID = leaves.size();
-          leaves.emplace( leaves.end() );
           for ( int i=0; i<state.len; i++ ) {
-            leaves.back().push_back( idx[i] );
+            nodes.back().store.push_back( state.idx[i] );
           }
         }
-
-        // debugging:
-        char ch;
-        scanf( "%c", &ch );
-
       }
     }
 
   private:
     /* ---------- private I/Os ---------- */
-    void write( FILE* out )
+    void write( FILE* out ) const
     {
       judger.write( out );
       fwrite( &nodeID, sizeof(int), 1, out );
@@ -210,7 +182,7 @@ namespace ran_forest
 
   public:
     /* ---------- public I/Os ---------- */
-    void write( std::string filename )
+    void write( std::string filename ) const
     {
       WITH_OPEN( out, filename.c_str(), "w" );
       write( out );
@@ -234,5 +206,17 @@ namespace ran_forest
     }
 
     /* ---------- Queries ---------- */
+    template <typename feature_t>
+    int query( const feature_t &p ) const
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      if ( isLeaf() ) {
+        return nodeID;
+      } else {
+        return child[judger(p)]->query( p );
+      }
+    }
+    
   };
 }
