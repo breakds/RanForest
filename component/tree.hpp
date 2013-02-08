@@ -37,6 +37,15 @@ namespace ran_forest
       
       NodeInfo() : node(nullptr), store() {}
 
+      explicit NodeInfo( FILE *in )
+      {
+        node = nullptr;
+        int len = 0;
+        fread( &len, sizeof(int), 1, in );
+        store.resize( len );
+        fread( &store[0], sizeof(int), len, in );
+      }
+
       explicit NodeInfo( NodeInfo&& other )
       {
         node = other.node;
@@ -46,6 +55,13 @@ namespace ran_forest
       inline int GetNodeID()
       {
         return node->nodeID;
+      }
+
+      inline void write( FILE *out ) const
+      {
+        int len = static_cast<int>( store.size() );
+        fwrite( &len, sizeof(int), 1, out );
+        fwrite( &store[0], sizeof(int), len, out );
       }
     };
     
@@ -166,16 +182,17 @@ namespace ran_forest
       }
     }
 
-    Tree( FILE *in )
+    Tree( FILE *in, std::vector<NodeInfo> &nodes )
     {
       judger.read( in );
       fread( &nodeID, sizeof(int), 1, in );
+      nodes[nodeID].node = this;
       unsigned char num = 0;
       fread( &num, sizeof(unsigned char), 1, in );
       if ( 0 < num ) {
         child.resize( num );
         for ( int i=0; i<num; i++ ) {
-          child[i].reset( new Tree( in ) );
+          child[i].reset( new Tree( in, nodes ) );
         }
       }
     }
@@ -197,6 +214,24 @@ namespace ran_forest
       END_WITH( in );
       return tree;
     }
+
+    Tree( std::string filename, std::vector<NodeInfo> &nodes )
+    {
+      WITH_OPEN( in, filename.c_str(), "r" );
+      judger.read( in );
+      fread( &nodeID, sizeof(int), 1, in );
+      nodes[nodeID].node = this;
+      unsigned char num = 0;
+      fread( &num, sizeof(unsigned char), 1, in );
+      if ( 0 < num ) {
+        child.resize( num );
+        for ( int i=0; i<num; i++ ) {
+          child[i].reset( new Tree( in, nodes ) );
+        }
+      }
+      END_WITH( in );
+    }
+
 
 
     /* ---------- Properties ---------- */

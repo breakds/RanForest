@@ -41,55 +41,112 @@ namespace ran_forest
                typename kernel<feature_t,splitter>::Options options,
                float proportion = 1.1f )
 
-     {
-       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
-                      "element of feature_t should have the same type as dataType." );
-       typedef kernel<feature_t,splitter> kernelType;
-       trees.resize( n );
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      typedef kernel<feature_t,splitter> kernelType;
+      trees.resize( n );
 
-       int len = static_cast<int>( dataPoints.size() );
-       int lenPerTree = len;
-       if ( proportion < 1.0f ) lenPerTree = static_cast<int>( len * proportion );
+      int len = static_cast<int>( dataPoints.size() );
+      int lenPerTree = len;
+      if ( proportion < 1.0f ) lenPerTree = static_cast<int>( len * proportion );
 
-       std::vector< std::vector<int> > idx(n);
-       std::vector< std::vector<NodeInfo> > tmpNodes(n);
+      std::vector< std::vector<int> > idx(n);
+      std::vector< std::vector<NodeInfo> > tmpNodes(n);
 
-       // construct individual trees
-       for ( int i=0; i<n; i++ ) {
-         idx[i] = rndgen::randperm( len, lenPerTree );
-         trees[i].reset( new treeType );
-         trees[i]->grow<kernel,order>( dataPoints,
-                                       idx[i],
-                                       tmpNodes[i],
-                                       options );
-       }
+      // construct individual trees
+      for ( int i=0; i<n; i++ ) {
+        idx[i] = rndgen::randperm( len, lenPerTree );
+        trees[i].reset( new treeType );
+        trees[i]->grow<kernel,order>( dataPoints,
+                                      idx[i],
+                                      tmpNodes[i],
+                                      options );
+        progress( i+1, n, "Forest Construction" );
+      }
+      printf( "\n" );
 
-       // Merge Node data
-       int nodeCount = 0;
-       for ( int i=0; i<n; i++ ) {
-         nodeCount += static_cast<int>( tmpNodes[i].size() );
-       }
-       nodes.clear();
-       nodes.reserve( nodeCount );
-       for ( int i=0; i<n; i++ ) {
-         for ( auto& ele : tmpNodes[i] ) {
-           ele.node->nodeID = static_cast<int>( nodes.size() );
-           nodes.push_back( NodeInfo( std::move( ele ) ) );
-         }
-       }
-     }
+      // Merge Node data
+      int nodeCount = 0;
+      for ( int i=0; i<n; i++ ) {
+        nodeCount += static_cast<int>( tmpNodes[i].size() );
+      }
+      nodes.clear();
+      nodes.reserve( nodeCount );
+      for ( int i=0; i<n; i++ ) {
+        for ( auto& ele : tmpNodes[i] ) {
+          ele.node->nodeID = static_cast<int>( nodes.size() );
+          nodes.push_back( NodeInfo( std::move( ele ) ) );
+        }
+      }
+    }
 
-     /* ---------- Accessors ---------- */
+    /* ---------- private I/O ---------- */
+    inline void writeNodes( std::string dir ) const
+    {
+      WITH_OPEN( out, strf( "%s/node.dat", dir.c_str() ).c_str(), "w" );
+      int len = nodeNum();
+      fwrite( &len, sizeof(int), 1, out );
+      for ( int i=0; i<len; i++ ) {
+        nodes[i].write( out );
+      }
+      END_WITH( out );
+    }
 
-     inline const NodeInfo& operator[]( int nodeID ) const
-     {
-       return nodes[nodeID];
-     }
+    inline void readNodes( std::string dir ) const
+    {
+      WITH_OPEN( in, strf( "%s/node.dat", dir.c_str() ).c_str(), "r" );
+      int len = 0;
+      fread( &len, sizeof(int), 1, in );
+      nodes.clear();
+      for ( int i=0; i<len; i++ ) {
+        nodes.emplace( nodes.end(), in );
+      }
+      END_WITH( in );
+    }
 
-     inline int size() const
-     {
-       return static_cast<int>( trees.size() );
-     }
+    /* ---------- public I/O ---------- */
+
+    inline void write( std::string dir ) const
+    {
+      system( strf( "mkdir -p %s", dir.c_str() ).c_str() );
+      for ( int i=0; i<size(); i++ ) {
+        trees[i]->write( strf( "%s/tree.%d", dir.c_str(), i ).c_str() );
+      }
+      writeNodes( dir );
+    }
+
+    Forest( std::string dir )
+    {
+      readNodes( dir );
+      
+      int n = 0;
+      do {
+        if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
+          n++;
+        } else {
+          break;
+        }
+      } while (true);
+
+      trees.clear();
+      
+      for ( int i=0; i<n; i++ ) {
+        trees.push_back( Tree<dataType,splitter>::read( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
+      }
+    }
+
+    /* ---------- Accessors ---------- */
+
+    inline const NodeInfo& operator[]( int nodeID ) const
+    {
+      return nodes[nodeID];
+    }
+
+    inline int size() const
+    {
+      return static_cast<int>( trees.size() );
+    }
 
     inline int nodeNum() const
     {

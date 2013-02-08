@@ -9,7 +9,7 @@ namespace ran_forest
     dataType th;
     int component;
 
-    inline void write( FILE *out )
+    inline void write( FILE *out ) const
     {
       fwrite( &th, sizeof(dataType), 1, out );
       fwrite( &component, sizeof(int), 1, out );
