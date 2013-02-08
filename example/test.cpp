@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <random>
 #include <vector>
-#include "../component/forest.hpp"
+#include "../RanForest.hpp"
 
 using namespace ran_forest;
 
