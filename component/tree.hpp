@@ -206,15 +206,6 @@ namespace ran_forest
       END_WITH( out );
     }
 
-    static std::unique_ptr<Tree<dataType,splitter> > read( std::string filename )
-    {
-      std::unique_ptr<Tree<dataType,splitter> > tree;
-      WITH_OPEN( in, filename.c_str(), "r" );
-      tree.reset( new Tree( in ) );
-      END_WITH( in );
-      return tree;
-    }
-
     Tree( std::string filename, std::vector<NodeInfo> &nodes )
     {
       WITH_OPEN( in, filename.c_str(), "r" );
@@ -250,6 +241,18 @@ namespace ran_forest
         return nodeID;
       } else {
         return child[judger(p)]->query( p );
+      }
+    }
+    
+    template <typename feature_t>
+    int query( const feature_t &p, int depth ) const
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );            
+      if ( depth == 0 || isLeaf() ) {
+        return nodeID;
+      } else {
+        return child[judger(p)]->queryNode( p, depth - 1 );
       }
     }
     

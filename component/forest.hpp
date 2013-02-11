@@ -93,14 +93,14 @@ namespace ran_forest
       END_WITH( out );
     }
 
-    inline void readNodes( std::string dir ) const
+    inline void readNodes( std::string dir )
     {
       WITH_OPEN( in, strf( "%s/node.dat", dir.c_str() ).c_str(), "r" );
       int len = 0;
       fread( &len, sizeof(int), 1, in );
       nodes.clear();
       for ( int i=0; i<len; i++ ) {
-        nodes.emplace( nodes.end(), in );
+        nodes.emplace_back( in );
       }
       END_WITH( in );
     }
@@ -132,8 +132,11 @@ namespace ran_forest
       trees.clear();
       
       for ( int i=0; i<n; i++ ) {
-        trees.push_back( Tree<dataType,splitter>::read( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
+        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
+        progress( i+1, n, "Loading Forest" );
       }
+      printf( "\n" );
+      Done( "%d trees loaded.", n );
     }
 
     /* ---------- Accessors ---------- */
@@ -175,12 +178,35 @@ namespace ran_forest
       res.reserve( trees.size() );
 
       for ( auto& tree : trees ) {
-        res.push_back( tree->query( p ) );
+        res.push_back( tree->query( p) );
       }
 
       return res;
     }
+    
+    template <typename feature_t>
+    inline std::vector<int> query( const feature_t p, int depth ) const
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      std::vector<int> res;
+      res.reserve( trees.size() );
 
+      for ( auto& tree : trees ) {
+        res.push_back( tree->query( p, depth ) );
+      }
+
+      return res;
+    }
+    
+    template <typename feature_t>
+    inline int queryNode( const feature_t p, const int nodeID, int depth ) const
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      return nodes[nodeID].node->query( p, depth );
+    }
+    
   };
 }
 
