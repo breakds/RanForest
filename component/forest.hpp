@@ -156,6 +156,15 @@ namespace ran_forest
       return static_cast<int>( nodes.size() );
     }
 
+    inline int levelSize( int level ) const
+    {
+      int s = 0;
+      for ( auto& tree : trees ) {
+        s += tree->levelSize( level );
+      }
+      return s;
+    }
+
     /* ---------- iterator ---------- */
     typename std::vector<NodeInfo>::const_iterator begin() const
     {

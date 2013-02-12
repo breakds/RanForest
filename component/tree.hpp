@@ -223,13 +223,29 @@ namespace ran_forest
       END_WITH( in );
     }
 
-
+    
 
     /* ---------- Properties ---------- */
     inline bool isLeaf() const
     {
       return 0 == child.size();
     }
+
+
+    inline int levelSize( int level ) const
+    {
+      std::deque<Tree<dataType,splitter> > queue;
+      if ( 0 == level || isLeaf() ) {
+        return 1;
+      }
+
+      int s = 0;
+      for ( auto& c : child ) {
+        s += c->levelSize( level - 1 );
+      }
+      return s;
+    }
+
 
     /* ---------- Queries ---------- */
     template <typename feature_t>
@@ -252,7 +268,7 @@ namespace ran_forest
       if ( depth == 0 || isLeaf() ) {
         return nodeID;
       } else {
-        return child[judger(p)]->queryNode( p, depth - 1 );
+        return child[judger(p)]->query( p, depth - 1 );
       }
     }
     
