@@ -57,6 +57,11 @@ namespace ran_forest
         return node->nodeID;
       }
 
+      inline bool isLeaf() const
+      {
+        return node->isLeaf();
+      }
+
       inline void write( FILE *out ) const
       {
         int len = static_cast<int>( store.size() );
@@ -143,7 +148,7 @@ namespace ran_forest
         // emplace the current node
         node->nodeID = static_cast<int>( nodes.size() );
         nodes.push_back( NodeInfo() );
-        nodes.back().node = this;
+        nodes.back().node = node;
         
         // split
         std::vector<int> partition = std::move( core.split( state, node->judger ) );
@@ -175,6 +180,7 @@ namespace ran_forest
     {
       judger.write( out );
       fwrite( &nodeID, sizeof(int), 1, out );
+      
       unsigned char num = static_cast<unsigned char>( child.size() );
       fwrite( &num, sizeof(unsigned char), 1, out );
       for ( auto& every : child ) {
@@ -222,7 +228,7 @@ namespace ran_forest
       }
       END_WITH( in );
     }
-
+    
     
 
     /* ---------- Properties ---------- */

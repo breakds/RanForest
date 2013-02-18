@@ -79,6 +79,7 @@ namespace ran_forest
           nodes.push_back( NodeInfo( std::move( ele ) ) );
         }
       }
+
     }
 
     /* ---------- private I/O ---------- */
@@ -110,6 +111,7 @@ namespace ran_forest
     inline void write( std::string dir ) const
     {
       system( strf( "mkdir -p %s", dir.c_str() ).c_str() );
+      system( strf( "rm -rf %s/*", dir.c_str() ).c_str() );
       for ( int i=0; i<size(); i++ ) {
         trees[i]->write( strf( "%s/tree.%d", dir.c_str(), i ).c_str() );
       }
