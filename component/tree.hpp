@@ -237,7 +237,7 @@ namespace ran_forest
       return 0 == child.size();
     }
 
-
+    
     inline int levelSize( int level ) const
     {
       std::deque<Tree<dataType,splitter> > queue;
@@ -252,8 +252,24 @@ namespace ran_forest
       return s;
     }
 
+    int depth() const
+    {
+      int max = 0;
+      for ( auto& c : child ) {
+        int t = c->depth();
+        if ( t > max ) max = t;
+      }
+      return 1 + max;
+    }
+
 
     /* ---------- Queries ---------- */
+    void appendNodesOnLevel( int level, std::vector<int>& int depth=0 ) {
+      if ( depth == level ) {
+        
+      }
+    }
+
     template <typename feature_t>
     int query( const feature_t &p ) const
     {

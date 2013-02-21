@@ -167,6 +167,16 @@ namespace ran_forest
       return s;
     }
 
+    inline int depth() const
+    {
+      int max = 0;
+      for ( auto& tree : trees ) {
+        int t = tree->depth();
+        if ( t > max ) max = t;
+      }
+      return max;
+    }
+
     /* ---------- iterator ---------- */
     typename std::vector<NodeInfo>::const_iterator begin() const
     {
