@@ -190,6 +190,15 @@ namespace ran_forest
 
     
     /* ---------- Queries ---------- */
+
+
+    inline void collectLevel( int depth, std::vector<int>& store ) 
+    {
+      for ( auto& tree : trees  ) {
+        tree->collectLevel( depth, store );
+      }
+    }
+
     template <typename feature_t>
     inline std::vector<int> query( const feature_t p ) const
     {
@@ -204,6 +213,7 @@ namespace ran_forest
 
       return res;
     }
+
     
     template <typename feature_t>
     inline std::vector<int> query( const feature_t p, int depth ) const

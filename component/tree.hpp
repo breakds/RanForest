@@ -262,13 +262,24 @@ namespace ran_forest
       return 1 + max;
     }
 
+    const std::vector<std::unique_ptr< Tree<dataType,splitter> > >& getChild()
+    {
+      return child;
+    }
+
 
     /* ---------- Queries ---------- */
-    void appendNodesOnLevel( int level, std::vector<int>& int depth=0 ) {
-      if ( depth == level ) {
-        
+    void collectLevel( int depth, std::vector<int>& store ) 
+    {
+      if ( 0 == depth ) {
+        store.push_back( nodeID );
+      } else {
+        for ( auto& c : child ) {
+          c->collectLevel( depth-1, store );
+        }
       }
     }
+    
 
     template <typename feature_t>
     int query( const feature_t &p ) const
