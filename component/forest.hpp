@@ -11,6 +11,7 @@
 #pragma once
 #include "LLPack/algorithms/random.hpp"
 #include "kernels/SimpleKernel.hpp"
+#include "kernels/GaussianKernel.hpp"
 #include "splitters/BinaryOnAxis.hpp"
 #include "tree.hpp"
 
