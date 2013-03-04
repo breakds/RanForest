@@ -10,9 +10,6 @@
 
 #pragma once
 #include "LLPack/algorithms/random.hpp"
-#include "kernels/SimpleKernel.hpp"
-#include "kernels/GaussianKernel.hpp"
-#include "splitters/BinaryOnAxis.hpp"
 #include "tree.hpp"
 
 namespace ran_forest
@@ -22,8 +19,8 @@ namespace ran_forest
   {
 
   public:
-    typedef Tree<dataType,BinaryOnAxis> treeType;
-    typedef typename Tree<dataType,BinaryOnAxis>::NodeInfo NodeInfo;
+    typedef Tree<dataType,splitter> treeType;
+    typedef typename Tree<dataType,splitter>::NodeInfo NodeInfo;
 
   private: 
     std::vector<std::unique_ptr<treeType> > trees;
@@ -141,6 +138,31 @@ namespace ran_forest
       printf( "\n" );
       Done( "%d trees loaded.", n );
     }
+
+
+    inline void read( std::string dir )
+    {
+      readNodes( dir );
+      
+      int n = 0;
+      do {
+        if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
+          n++;
+        } else {
+          break;
+        }
+      } while (true);
+
+      trees.clear();
+      
+      for ( int i=0; i<n; i++ ) {
+        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
+        progress( i+1, n, "Loading Forest" );
+      }
+      printf( "\n" );
+      Done( "%d trees loaded.", n );
+    }
+
 
     /* ---------- Accessors ---------- */
 

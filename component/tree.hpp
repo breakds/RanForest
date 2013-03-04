@@ -64,9 +64,7 @@ namespace ran_forest
 
       inline void write( FILE *out ) const
       {
-        int len = static_cast<int>( store.size() );
-        fwrite( &len, sizeof(int), 1, out );
-        fwrite( &store[0], sizeof(int), len, out );
+        writeVector( out, store );
       }
     };
     

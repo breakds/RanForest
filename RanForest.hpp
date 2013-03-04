@@ -2,6 +2,8 @@
 #include "component/Aux/Revolver.hpp"
 #include "component/kernels/SimpleKernel.hpp"
 #include "component/kernels/GaussianKernel.hpp"
+#include "component/kernels/MaxGapSubspaceKernel.hpp"
 #include "component/splitters/BinaryOnAxis.hpp"
+#include "component/splitters/BinaryOnSubspace.hpp"
 #include "component/tree.hpp"
 #include "component/forest.hpp"
