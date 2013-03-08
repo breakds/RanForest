@@ -260,6 +260,16 @@ namespace ran_forest
                      "element of feature_t should have the same type as dataType." );
       return nodes[nodeID].node->query( p, depth );
     }
+
+    template <typename feature_t>
+    inline void levelDown( const feature_t p, std::vector<int>& nodeIDs ) const
+    {
+      static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
+                     "element of feature_t should have the same type as dataType." );
+      for ( auto& ele : nodeIDs ) {
+        ele = nodes[ele].node->query( p, 1 );
+      }
+    }
     
   };
 }

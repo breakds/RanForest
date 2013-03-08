@@ -119,7 +119,7 @@ namespace ran_forest
         return partition;
       }
 
-
+      
       
       double bestScore = -state.len-1;
       for ( int trial = 0; trial < options.numHypo; trial++ ) {
@@ -167,17 +167,14 @@ namespace ran_forest
           axis = rndgen::rnd_unit_vec<double>( realDimPrelim, options.rng );
           maxPrj = dotprod( dataPoints[state.idx[0]], c, axis );
           minPrj = maxPrj;
-
+          std::vector<double> prjs( state.len );
           for ( int i=1; i<state.len; i++ ) {
-            double prj = dotprod( dataPoints[state.idx[i]], c, axis );
-            if ( prj > maxPrj ) {
-              maxPrj = prj;
-              maxIdx = i;
-            } else if ( prj < minPrj ) {
-              minPrj = prj;
-              minIdx = i;
-            }
+            prjs[i] = dotprod( dataPoints[state.idx[i]], c, axis );
           }
+          minIdx = sorting::kthIndex( prjs, static_cast<int>( 0.1 * state.len ) );
+          maxIdx = sorting::kthIndex( prjs, static_cast<int>( 0.9 * state.len ) );
+          minPrj = prjs[minIdx];
+          maxPrj = prjs[maxIdx];
         }
 
         // find the most significant components between difference of max and min
