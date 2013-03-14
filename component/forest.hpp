@@ -38,7 +38,6 @@ namespace ran_forest
                const std::vector<feature_t>& dataPoints,
                typename kernel<feature_t,splitter>::Options options,
                float proportion = 1.1f )
-
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
