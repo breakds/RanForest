@@ -40,10 +40,7 @@ namespace ran_forest
       explicit NodeInfo( FILE *in )
       {
         node = nullptr;
-        int len = 0;
-        fread( &len, sizeof(int), 1, in );
-        store.resize( len );
-        fread( &store[0], sizeof(int), len, in );
+        readVector( in, store );
       }
 
       explicit NodeInfo( NodeInfo&& other )
