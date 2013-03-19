@@ -9,7 +9,10 @@
  */
 
 #pragma once
+#include <type_traits>
 #include "LLPack/algorithms/random.hpp"
+#include "LLPack/algorithms/list.hpp"
+#include "Aux/Bipartite.hpp"
 #include "tree.hpp"
 
 namespace ran_forest
@@ -50,7 +53,7 @@ namespace ran_forest
 
       std::vector< std::vector<int> > idx(n);
       std::vector< std::vector<NodeInfo> > tmpNodes(n);
-
+      
       // construct individual trees
       for ( int i=0; i<n; i++ ) {
         idx[i] = rndgen::randperm( len, lenPerTree );
@@ -269,7 +272,26 @@ namespace ran_forest
         ele = nodes[ele].node->query( p, 1 );
       }
     }
-    
+
+    /* ----- Bipartite based Query ----- */
+    template <typename feature_t, template<typename T=feature_t> class container>
+    inline Bipartite batch_query( const container<feature_t>& feat, int level = -1 )
+    {
+      static_assert( std::is_same< container<feature_t>, std::vector<feature_t> >::value ||
+                     std::is_same< container<feature_t>, SubListView<feature_t> >::value,
+                     "parameter 0 (feat) is not of an acceptable iterable type" );
+      Bipartite n_to_l( static_cast<int>( feat.size() ), nodeNum() );
+      int n = 0;
+      double wt = 1.0 / static_cast<double>( trees.size() );
+      for ( auto& ele : feat ) {
+        auto res = query( ele, level );
+        for ( auto& item : res ) {
+          n_to_l.add( n, item, wt );
+        }
+        n++;
+      } // for ele : feat
+      return n_to_l;
+    }
   };
 }
 
