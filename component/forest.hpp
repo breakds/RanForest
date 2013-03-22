@@ -274,14 +274,16 @@ namespace ran_forest
     }
 
     /* ----- Bipartite based Query ----- */
-    template <typename feature_t, template<typename T=feature_t> class container>
+    template <typename feature_t, template<typename T = feature_t, typename... restArgs> class container>
     inline Bipartite batch_query( const container<feature_t>& feat, int level = -1 )
     {
       static_assert( std::is_same< container<feature_t>, std::vector<feature_t> >::value ||
                      std::is_same< container<feature_t>, SubListView<feature_t> >::value,
                      "parameter 0 (feat) is not of an acceptable iterable type" );
-      Bipartite n_to_l( static_cast<int>( feat.size() ), nodeNum() );
+      int N = feat.size();
+      Bipartite n_to_l( static_cast<int>( N ), nodeNum() );
       int n = 0;
+      int m = 0;
       double wt = 1.0 / static_cast<double>( trees.size() );
       for ( auto& ele : feat ) {
         auto res = query( ele, level );
@@ -289,7 +291,12 @@ namespace ran_forest
           n_to_l.add( n, item, wt );
         }
         n++;
+        if ( n * 100 / N > m ) {
+          m = n * 100 / N;
+          progress( n, N, "batched query" );
+        }
       } // for ele : feat
+      printf( "\n" );
       return n_to_l;
     }
   };
