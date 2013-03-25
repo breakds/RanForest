@@ -217,7 +217,7 @@ namespace ran_forest
     /* ---------- Queries ---------- */
 
 
-    inline void collectLevel( int depth, std::vector<int>& store ) 
+    inline void collectLevel( int depth, std::vector<int>& store ) const
     {
       for ( auto& tree : trees  ) {
         tree->collectLevel( depth, store );
