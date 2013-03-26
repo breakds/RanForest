@@ -50,8 +50,12 @@ namespace ran_forest
 
     inline void clear()
     {
-      a_to_b.clear();
-      b_to_a.clear();
+      for ( auto &ele : a_to_b ) {
+        ele.clear();
+      }
+      for ( auto &ele : b_to_a ) {
+        ele.clear();
+      }
     }
 
     inline void grow_a( int target ) {
