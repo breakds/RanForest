@@ -41,6 +41,50 @@ namespace ran_forest
       b_to_a.swap( other.b_to_a );
     }
 
+    explicit Bipartite( std::string filename )
+    {
+      WITH_OPEN( in, filename.c_str(), "r" );
+      int numA = 0;
+      int numB = 0;
+      fread( &numA, sizeof(int), 1, in );
+      a_to_b.resize( numA );
+      fread( &numB, sizeof(int), 1, in );
+      b_to_a.resize( numB );
+      clear();
+
+
+      for ( int a=0; a<numA; a++ ) {
+        int num = 0;
+        fread( &num, sizeof(int), 1, in );
+        for ( int i=0; i<num; i++ ) {
+          int b = 0;
+          double wt = 0.0;
+          fread( &b, sizeof(int), 1, in );
+          fread( &wt, sizeof(double), 1, in );
+          add( a, b, wt );
+        }
+      }
+      END_WITH( in );
+    }
+
+    void write( std::string filename )
+    {
+      WITH_OPEN( out, filename.c_str(), "w" );
+      int numA = sizeA();
+      fwrite( &numA, sizeof(int), 1, out );
+      int numB = sizeB();
+      fwrite( &numB, sizeof(int), 1, out );
+      for ( int a=0; a<numA; a++ ) {
+        fwrite( &a, sizeof(int), 1, out );
+        for ( auto& b : a_to_b[a] ) {
+          fwrite( &b.first, sizeof(int), 1, out );
+          fwrite( &b.second, sizeof(double), 1, out );
+        }
+      }
+      END_WITH( out );
+    }
+    
+
     const Bipartite& operator=( Bipartite &&other )
     {
       a_to_b.swap( other.a_to_b );

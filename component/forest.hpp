@@ -231,11 +231,11 @@ namespace ran_forest
                      "element of feature_t should have the same type as dataType." );
       std::vector<int> res;
       res.reserve( trees.size() );
-
+      
       for ( auto& tree : trees ) {
         res.push_back( tree->query( p) );
       }
-
+      
       return res;
     }
 
