@@ -55,6 +55,10 @@ namespace ran_forest
       std::vector< std::vector<NodeInfo> > tmpNodes(n);
       
       // construct individual trees
+      ProgressBar progressbar;
+      progressbar.reset( n );
+      int complete = 0;
+#     pragma omp parallel for
       for ( int i=0; i<n; i++ ) {
         idx[i] = rndgen::randperm( len, lenPerTree );
         trees[i].reset( new treeType );
@@ -62,7 +66,10 @@ namespace ran_forest
                                       idx[i],
                                       tmpNodes[i],
                                       options );
-        progress( i+1, n, "Forest Construction" );
+#       pragma omp critical
+        {
+          progressbar.update( ++complete, "Forest Construction" );
+        }
       }
       printf( "\n" );
 
