@@ -27,8 +27,10 @@ namespace ran_forest
       int numHypo; // number of hypothesis
       int stopNum; // stop splitting when a node contains elements less then stopNum
       dataType converge; // criteria for convergence
+      int projDim; // the number of components that will be
+                   // considerered in the split process, -1 indicates using all
 
-      Options() : maxDepth(-1), dim(1), numHypo(30), stopNum(5), converge(0) {}
+      Options() : maxDepth(-1), dim(1), numHypo(30), stopNum(5), converge(0), projDim(-1) {}
     }; 
     
     class State
@@ -41,7 +43,7 @@ namespace ran_forest
 
       State( int *i, int l, int s )
         : idx(i), len(l), shuffler(s), depth(0) {}
-
+      
       State( int *i, int l, const Shuffler& s, int d )
         : idx(i), len(l), shuffler(s), depth(d) {}
 
@@ -68,6 +70,16 @@ namespace ran_forest
        * -4, -5 = invalid split (totally unbalanced split)
        * -6 = max depth reached
        */
+
+      // if there are more than projDim components available, splice
+      // them
+      if ( 0 < options.projDim && state.shuffler.Number() > options.projDim ) {
+        state.shuffler.ResetShuffle();
+        while ( state.shuffler.Number() > options.projDim ) {
+          state.shuffler.Next();
+          state.shuffler.Disqualify();
+        }
+      }
 
       std::vector<int> partition(3);
       partition[0] = 0;

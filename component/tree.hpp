@@ -231,7 +231,7 @@ namespace ran_forest
     {
       return 0 == child.size();
     }
-
+    
     
     inline int levelSize( int level ) const
     {
@@ -263,6 +263,26 @@ namespace ran_forest
     }
 
 
+    template <typename T>
+    T reduce( const std::function<T(Tree<dataType,splitter>& node,std::vector<T>&)> fun,
+              const std::function<T(Tree<dataType,splitter>& node)> base )
+    {
+      if ( isLeaf() ) {
+        return base( *this );
+      } else {
+        std::vector<T> results;
+        for ( auto& c : child ) {
+          results.push_back( c->reduce( fun, base ) );
+        }
+        return fun( *this, results );
+      }
+    }
+                                    
+              
+              
+              
+
+    
     /* ---------- Queries ---------- */
     void collectLevel( int depth, std::vector<int>& store ) 
     {

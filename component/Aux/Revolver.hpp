@@ -113,7 +113,7 @@ namespace ran_forest {
       }
       size--;
     }
-
+    
     // splice by specifying the address
     // no looking up involved
     inline void SpliceAddress( int add )
