@@ -209,6 +209,11 @@ namespace ran_forest
       return max;
     }
 
+    inline const treeType& tree( int ind ) const
+    {
+      return *trees[ind];
+    }
+
     /* ---------- iterator ---------- */
     typename std::vector<NodeInfo>::const_iterator begin() const
     {

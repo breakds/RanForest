@@ -264,8 +264,8 @@ namespace ran_forest
 
 
     template <typename T>
-    T reduce( const std::function<T(Tree<dataType,splitter>& node,std::vector<T>&)> fun,
-              const std::function<T(Tree<dataType,splitter>& node)> base )
+    T reduce( std::function<T(const Tree<dataType,splitter>& node,const std::vector<T>&)> fun,
+              std::function<T(const Tree<dataType,splitter>& node)> base ) const
     {
       if ( isLeaf() ) {
         return base( *this );
@@ -318,6 +318,12 @@ namespace ran_forest
       } else {
         return child[judger(p)]->query( p, depth - 1 );
       }
+    }
+
+    /* ---------- Developer's Operations ---------- */
+    const splitter<dataType> &getJudger() const
+    {
+      return judger;
     }
     
   };
