@@ -99,7 +99,7 @@ namespace ran_forest
           for ( int i=0; i<state.len; i++ ) {
             distances[i] = algebra::dist_l1( vantage, dataPoints[state.idx[i]], options.dim );
           }
-          double median = sorting::median( distances );
+          double median = sorting::nmedian( distances );
           // calculate score
           double score = 0.0;
           for ( int i=0; i<state.len; i++ ) {
