@@ -130,7 +130,7 @@ namespace ran_forest
       working_list.push_back( std::make_pair( this,
                                               typename kernelType::State( &idx[0],
                                                                           static_cast<int>( idx.size() ),
-                                                                          options.dim ) ) );
+                                                                          options ) ) );
 
       // initialize containers
       nodes.clear();
@@ -157,8 +157,7 @@ namespace ran_forest
             working_list.push_back( std::make_pair( node->child[i].get(),
                                                     typename kernelType::State( state.idx + partition[i],
                                                                                 partition[i+1] - partition[i],
-                                                                                state.shuffler,
-                                                                                state.depth + 1 ) ) );
+                                                                                state ) ) );
           }
         } else {
           /* leaf node */

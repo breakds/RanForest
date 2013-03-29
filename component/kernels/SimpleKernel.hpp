@@ -41,11 +41,12 @@ namespace ran_forest
       Shuffler shuffler;
       int depth;
 
-      State( int *i, int l, int s )
-        : idx(i), len(l), shuffler(s), depth(0) {}
-      
-      State( int *i, int l, const Shuffler& s, int d )
-        : idx(i), len(l), shuffler(s), depth(d) {}
+      State( int *i, int l, const Options &options )
+        : idx(i), len(l), shuffler(options.dim), depth(0) {}
+
+    
+      State( int *i, int l, const State& other )
+        : idx(i), len(l), shuffler( other.shuffler ), depth( other.depth + 1 ) {}
 
       State( State&& other )
       {
