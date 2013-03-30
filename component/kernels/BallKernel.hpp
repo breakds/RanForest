@@ -9,6 +9,7 @@
  */
 
 #pragma once
+#include <algorithm>
 #include "../Aux/Revolver.hpp"
 #include "LLPack/algorithms/random.hpp"
 #include "LLPack/algorithms/algebra.hpp"
@@ -66,6 +67,7 @@ namespace ran_forest
     {
       /* exception code:
        * -1 = too few patches within a node
+       * -3 = distance converge
        * -4, -5 = invalid split (totally unbalanced split)
        * -6 = max depth reached
        */
@@ -99,7 +101,16 @@ namespace ran_forest
           for ( int i=0; i<state.len; i++ ) {
             distances[i] = algebra::dist_l1( vantage, dataPoints[state.idx[i]], options.dim );
           }
-          double median = sorting::nmedian( distances );
+          double maxDist = *std::max_element( distances.begin(), distances.end() );
+          // DebugInfo( "maxDist: %.6lf\n", maxDist );
+          if ( maxDist < options.converge ) {
+            partition[0] = -3;
+            return partition;
+          }
+          std::nth_element( distances.begin(), 
+                            distances.begin() + state.len / 2, 
+                            distances.end() );
+          double median = maxDist = distances[ state.len / 2 ];
           // calculate score
           double score = 0.0;
           for ( int i=0; i<state.len; i++ ) {

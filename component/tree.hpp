@@ -134,7 +134,11 @@ namespace ran_forest
 
       // initialize containers
       nodes.clear();
-      
+
+      // debugging:
+      // int settledNum = 0;
+      // int tmpCnt = 0;
+
       while ( !working_list.empty() ) {
         Tree<dataType,splitter> *node = fetch<order>(working_list).first;
         typename kernelType::State state = std::move( fetch<order>(working_list).second );
@@ -149,6 +153,9 @@ namespace ran_forest
         std::vector<int> partition = std::move( core.split( state, node->judger ) );
         
         if ( 0 == partition[0] ) {
+          // debugging:
+          // DebugInfo( "%d -> %d + %d", state.len, partition[1], state.len - partition[1] );
+          // ResumeOnRet();
           /* internal node */
           int branches = static_cast<int>( partition.size() )-1;
           node->child.resize(branches);
@@ -164,6 +171,12 @@ namespace ran_forest
           for ( int i=0; i<state.len; i++ ) {
             nodes.back().store.push_back( state.idx[i] );
           }
+          // debugging:
+          // settledNum += state.len;
+          // if ( settledNum > tmpCnt * 1000 ) {
+          //   tmpCnt = settledNum / 1000 + 1;
+          //   DebugInfo( "leaf: %d", settledNum );
+          // }
         }
       }
     }
