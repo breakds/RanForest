@@ -110,12 +110,16 @@ namespace ran_forest
           std::nth_element( distances.begin(), 
                             distances.begin() + state.len / 2, 
                             distances.end() );
-          double median = maxDist = distances[ state.len / 2 ];
+          double median = distances[ state.len / 2 ];
           // calculate score
-          double score = 0.0;
           for ( int i=0; i<state.len; i++ ) {
-            score += fabs( distances[i] - median );
+            distances[i] = fabs( distances[i] - median );
           }
+          std::nth_element( distances.begin(),
+                            distances.begin() + state.len / 2,
+                            distances.end() );
+          double score = distances[ state.len / 2 ];
+
           if ( score > bestScore ) {
             bestScore = score;
             th = median;
