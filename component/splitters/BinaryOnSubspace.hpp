@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "LLPack/utils/extio.hpp"
 #include "LLPack/utils/candy.hpp"
 
@@ -8,6 +9,8 @@ namespace ran_forest
   template <typename dataType>
   class BinaryOnSubspace
   {
+  public:
+    static const std::string name;
   public:
     dataType th;
     std::vector<int> components;
@@ -41,4 +44,6 @@ namespace ran_forest
       return 1;
     }
   };
+  template <typename dataType>
+  const std::string BinaryOnSubspace<dataType>::name = "Binary On Subspace";
 }

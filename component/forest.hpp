@@ -311,6 +311,18 @@ namespace ran_forest
       printf( "\n" );
       return n_to_l;
     }
+    
+    /* ----- Forest Summary ----- */
+    void Summary()
+    {
+      printf( "--------------- Forest Summary ---------------\n" );
+      Info( "Splitter Type: %s", splitter<dataType>::name.c_str() );
+      Info( "Trees: %lu", trees.size() );
+      Info( "Depth: %d", depth() );
+      Info( "Num Leaves: %d", levelSize( -1 ) );
+      Info( "Num Nodes: %d", nodeNum() );
+      printf( "----------------------------------------------\n" );
+    }
   };
 }
 

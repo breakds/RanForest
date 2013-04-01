@@ -1,10 +1,14 @@
 #pragma once
 
+#include <string>
+
 namespace ran_forest
 {
   template <typename dataType>
   class BinaryOnAxis
   {
+  public:
+static const std::string name;
   public:
     dataType th;
     int component;
@@ -30,4 +34,6 @@ namespace ran_forest
       return 1;
     }
   };
+  template <typename dataType>
+  const std::string BinaryOnAxis<dataType>::name = "Binary On Axis";
 }

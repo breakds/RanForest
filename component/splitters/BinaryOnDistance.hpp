@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "LLPack/utils/extio.hpp"
 #include "LLPack/algorithms/algebra.hpp"
 
@@ -8,6 +9,8 @@ namespace ran_forest
   template <typename dataType>
   class BinaryOnDistance
   {
+  public:
+    static const std::string name;
   public:
     double th;
     std::vector<dataType> vantage;
@@ -34,4 +37,6 @@ namespace ran_forest
       return 1;
     }
   };
+  template <typename dataType>
+  const std::string BinaryOnDistance<dataType>::name = "Binary On Distance";
 }

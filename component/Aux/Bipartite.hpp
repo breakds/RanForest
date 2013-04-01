@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 using std::vector;
 using std::pair;
@@ -162,6 +163,39 @@ namespace ran_forest
     inline int sizeB() const 
     {
       return static_cast<int>( b_to_a.size() );
+    }
+
+    /* ---------- Developer's Operations ---------- */
+    size_t MedianContainmentA()
+    {
+      std::vector<int> indices( a_to_b.size() );
+      for ( size_t i=0; i<a_to_b.size(); i++ ) {
+        indices[i] = i;
+      }
+      std::nth_element( indices.begin(),
+                        indices.begin() + indices.size() / 2,
+                        indices.end(),
+                        [this]( int i, int j )
+                        {
+                          return a_to_b[i].size() < a_to_b[j].size();
+                        } );
+      return a_to_b[indices[indices.size()/2]].size();
+    }
+
+    size_t MedianContainmentB()
+    {
+      std::vector<int> indices( b_to_a.size() );
+      for ( size_t i=0; i<b_to_a.size(); i++ ) {
+        indices[i] = i;
+      }
+      std::nth_element( indices.begin(),
+                        indices.begin() + indices.size() / 2,
+                        indices.end(),
+                        [this]( int i, int j )
+                        {
+                          return b_to_a[i].size() < b_to_a[j].size();
+                        } );
+      return b_to_a[indices[indices.size()/2]].size();
     }
   };
 }
