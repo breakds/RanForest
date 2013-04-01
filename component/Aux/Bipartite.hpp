@@ -166,9 +166,19 @@ namespace ran_forest
     }
 
     /* ---------- Developer's Operations ---------- */
-    size_t MedianContainmentA()
+
+    size_t MedianContainmentA( const std::vector<int> *idx = nullptr )
     {
-      std::vector<int> indices( a_to_b.size() );
+      std::vector<int> indices;
+      if ( nullptr == idx ) {
+        indices.resize( a_to_b.size() );
+        for ( size_t i=0; i<a_to_b.size(); i++ ) {
+          indices[i] = i;
+        }
+      } else {
+        indices = *idx;
+      }
+      
       for ( size_t i=0; i<a_to_b.size(); i++ ) {
         indices[i] = i;
       }
@@ -181,12 +191,17 @@ namespace ran_forest
                         } );
       return a_to_b[indices[indices.size()/2]].size();
     }
-
-    size_t MedianContainmentB()
+    
+    size_t MedianContainmentB( const std::vector<int> *idx = nullptr )
     {
-      std::vector<int> indices( b_to_a.size() );
-      for ( size_t i=0; i<b_to_a.size(); i++ ) {
-        indices[i] = i;
+      std::vector<int> indices;
+      if ( nullptr == idx ) {
+        indices.resize( b_to_a.size() );
+        for ( size_t i=0; i<b_to_a.size(); i++ ) {
+          indices[i] = i;
+        }
+      } else {
+        indices = *idx;
       }
       std::nth_element( indices.begin(),
                         indices.begin() + indices.size() / 2,
