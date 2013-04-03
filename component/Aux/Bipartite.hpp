@@ -57,13 +57,11 @@ namespace ran_forest
       for ( int a=0; a<numA; a++ ) {
         int num = 0;
         fread( &num, sizeof(int), 1, in );
-        DebugInfo( "%d: num = %d", a, num );
         for ( int i=0; i<num; i++ ) {
           int b = 0;
           double wt = 0.0;
           fread( &b, sizeof(int), 1, in );
           fread( &wt, sizeof(double), 1, in );
-          DebugInfo( "i = %d, b = %d, wt = %.5lf", i, b, wt );
           add( a, b, wt );
         }
       }

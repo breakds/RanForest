@@ -224,6 +224,7 @@ namespace ran_forest
       WITH_OPEN( in, filename.c_str(), "r" );
       judger.read( in );
       fread( &nodeID, sizeof(int), 1, in );
+      
       nodes[nodeID].node = this;
       unsigned char num = 0;
       fread( &num, sizeof(unsigned char), 1, in );
