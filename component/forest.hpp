@@ -101,16 +101,21 @@ namespace ran_forest
       END_WITH( out );
     }
 
-    inline void readNodes( std::string dir )
+    bool readNodes( std::string dir )
     {
-      WITH_OPEN( in, strf( "%s/node.dat", dir.c_str() ).c_str(), "r" );
-      int len = 0;
-      fread( &len, sizeof(int), 1, in );
-      nodes.clear();
-      for ( int i=0; i<len; i++ ) {
-        nodes.emplace_back( in );
+      if ( probeFile( strf( "%s/node.dat", dir.c_str() ) ) ) {
+        WITH_OPEN( in, strf( "%s/node.dat", dir.c_str() ).c_str(), "r" );
+        int len = 0;
+        fread( &len, sizeof(int), 1, in );
+        nodes.clear();
+        for ( int i=0; i<len; i++ ) {
+          nodes.emplace_back( in );
+        }
+        END_WITH( in );
+        return true;
+      } else {
+        return false;
       }
-      END_WITH( in );
     }
 
     /* ---------- public I/O ---------- */
@@ -127,8 +132,7 @@ namespace ran_forest
 
     Forest( std::string dir )
     {
-      readNodes( dir );
-      
+      // find the number of trees needed to be read
       int n = 0;
       do {
         if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
@@ -137,22 +141,35 @@ namespace ran_forest
           break;
         }
       } while (true);
-
       trees.clear();
-      
-      for ( int i=0; i<n; i++ ) {
-        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
-        progress( i+1, n, "Loading Forest" );
-      }
-      printf( "\n" );
-      Done( "%d trees loaded.", n );
-    }
 
+      // read nodes Info (if exists)
+      bool hasNodeInfo = readNodes( dir );
+
+      // read trees
+      int offset = 0;
+      ProgressBar progressbar;
+      progressbar.reset( n );
+      for ( int i=0; i<n; i++ ) {
+        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes, !hasNodeInfo  ) );
+        progressbar.update( i+1, "Loading Forest" );
+      }
+      Done( "%d trees loaded.", n );
+
+      if ( !hasNodeInfo ) {
+        // get total node Num for every tree;
+        int total = 0;
+        for ( auto& ele : trees ) total += ele->nodeNum();
+        nodes.resize( total );
+
+        int offset = 0;
+        for ( auto& ele : trees ) offset = ele->normalizeID( nodes, offset );
+      }
+    }
 
     inline void read( std::string dir )
     {
-      readNodes( dir );
-      
+      // find the number of trees needed to be read
       int n = 0;
       do {
         if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
@@ -161,17 +178,31 @@ namespace ran_forest
           break;
         }
       } while (true);
-
       trees.clear();
-      
+
+      // read nodes Info (if exists)
+      bool hasNodeInfo = readNodes( dir );
+
+      // read trees
+      ProgressBar progressbar;
+      progressbar.reset( n );
       for ( int i=0; i<n; i++ ) {
-        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes ) );
-        progress( i+1, n, "Loading Forest" );
+        trees.emplace( trees.end(), new Tree<dataType,splitter>( strf( "%s/tree.%d", dir.c_str(), i ).c_str(), nodes, !hasNodeInfo  ) );
+        progressbar.update( i+1, "Loading Forest" );
       }
-      printf( "\n" );
+
+      if ( !hasNodeInfo ) {
+        // get total node Num for every tree;
+        int total = 0;
+        for ( auto& ele : trees ) total += ele->nodeNum();
+        nodes.resize( total );
+
+        int offset = 0;
+        for ( auto& ele : trees ) offset = ele->normalizeID( nodes, offset );
+      }
       Done( "%d trees loaded.", n );
     }
-
+    
 
     /* ---------- Accessors ---------- */
 

@@ -195,11 +195,13 @@ namespace ran_forest
       }
     }
 
-    Tree( FILE *in, std::vector<NodeInfo> &nodes )
+    Tree( FILE *in, std::vector<NodeInfo> &nodes, bool ignoreNodeID = false )
     {
       judger.read( in );
       fread( &nodeID, sizeof(int), 1, in );
-      nodes[nodeID].node = this;
+      if ( !ignoreNodeID ) {
+        nodes[nodeID].node = this;
+      }
       unsigned char num = 0;
       fread( &num, sizeof(unsigned char), 1, in );
       if ( 0 < num ) {
@@ -219,13 +221,14 @@ namespace ran_forest
       END_WITH( out );
     }
 
-    Tree( std::string filename, std::vector<NodeInfo> &nodes )
+    Tree( std::string filename, std::vector<NodeInfo> &nodes, bool ignoreNodeID = false )
     {
       WITH_OPEN( in, filename.c_str(), "r" );
       judger.read( in );
       fread( &nodeID, sizeof(int), 1, in );
-      
-      nodes[nodeID].node = this;
+      if ( !ignoreNodeID ) {
+        nodes[nodeID].node = this;
+      }
       unsigned char num = 0;
       fread( &num, sizeof(unsigned char), 1, in );
       if ( 0 < num ) {
@@ -290,12 +293,33 @@ namespace ran_forest
         return fun( *this, results );
       }
     }
-                                    
-              
-              
-              
 
-    
+
+    int nodeNum() const 
+    {
+      if ( isLeaf() ) {
+        return 1;
+      } else {
+        int s = 1;
+        for ( auto& c : child ) {
+          s += c->nodeNum();
+        }
+        return s;
+      }
+    }
+
+    int normalizeID( std::vector<NodeInfo> &nodes, int offset = 0 )
+    {
+      nodeID = offset;
+      nodes[nodeID].node = this;
+      int pos = offset + 1;
+      for ( auto& c : child ) {
+        pos = c->normalizeID( nodes, pos );
+      }
+      return pos;
+    }
+                                    
+
     /* ---------- Queries ---------- */
     void collectLevel( int depth, std::vector<int>& store ) 
     {
