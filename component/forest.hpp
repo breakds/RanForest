@@ -147,7 +147,6 @@ namespace ran_forest
       bool hasNodeInfo = readNodes( dir );
 
       // read trees
-      int offset = 0;
       ProgressBar progressbar;
       progressbar.reset( n );
       for ( int i=0; i<n; i++ ) {
