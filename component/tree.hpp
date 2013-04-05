@@ -362,6 +362,16 @@ namespace ran_forest
     {
       return judger;
     }
-    
+
+
+    inline bool operator==( const Tree<dataType, splitter>& other ) const
+    {
+      if (!( judger == other.judger )) return false;
+      if ( child.size() != other.child.size() ) return false;
+      for ( int i=0; i<static_cast<int>( child.size() ); i++ ) {
+        if (!( child[i] == other.child[i] )) return false;
+      }
+      return true;
+    }
   };
 }

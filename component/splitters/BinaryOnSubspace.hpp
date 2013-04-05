@@ -43,6 +43,20 @@ namespace ran_forest
       if ( val < th ) return 0;
       return 1;
     }
+
+    bool operator==( const BinaryOnSubspace<dataType>& other ) const
+    {
+      if ( th != other.th ) return false;
+      if ( components.size() != other.components.size() ) return false;
+      if ( projaxis.size() != other.projaxis.size() ) return false;
+      for ( int i=0; i<static_cast<int>( components.size() ); i++ ) {
+        if ( components[i] != other.components[i] ) return false;
+      }
+      for ( int i=0; i<static_cast<int>( projaxis.size() ); i++ ) {
+        if ( projaxis[i] != other.projaxis[i] ) return false;
+      }
+      return true;
+    }
   };
   template <typename dataType>
   const std::string BinaryOnSubspace<dataType>::name = "Binary On Subspace";

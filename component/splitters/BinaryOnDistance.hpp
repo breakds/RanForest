@@ -36,6 +36,16 @@ namespace ran_forest
       if ( dist < th ) return 0;
       return 1;
     }
+
+    inline bool operator==( const BinaryOnDistance<dataType>& other ) const 
+    {
+      if ( th != other.th ) return false;
+      if ( vantage.size() != other.vantage.size() ) return false;
+      for ( int i=0; i<static_cast<int>( vantage.size() ); i++ ) {
+        if ( vantage[i] != other.vantage[i] ) return false;
+      }
+      return true;
+    }
   };
   template <typename dataType>
   const std::string BinaryOnDistance<dataType>::name = "Binary On Distance";

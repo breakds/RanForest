@@ -353,6 +353,16 @@ namespace ran_forest
       Info( "Num Nodes: %d", nodeNum() );
       printf( "----------------------------------------------\n" );
     }
+
+    /* ---------- Developer's Operations ---------- */
+    bool operator==( const Forest<dataType,splitter>& other ) const
+    {
+      if ( trees.size() != other.trees.size() ) return false;
+      for ( int n=0; n<static_cast<int>( trees.size() ); n++ ) {
+        if (!( trees[n] == other.trees[n] )) return false;
+      }
+      return true;
+    }
   };
 }
 

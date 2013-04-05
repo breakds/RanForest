@@ -33,6 +33,11 @@ static const std::string name;
       if ( p[component] < th ) return 0;
       return 1;
     }
+
+    inline bool operator==( const BinaryOnAxis<dataType>& other ) const
+    {
+      return ( th == other.th ) && ( component == component );
+    }
   };
   template <typename dataType>
   const std::string BinaryOnAxis<dataType>::name = "Binary On Axis";
