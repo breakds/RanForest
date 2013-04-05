@@ -207,7 +207,7 @@ namespace ran_forest
       if ( 0 < num ) {
         child.resize( num );
         for ( int i=0; i<num; i++ ) {
-          child[i].reset( new Tree( in, nodes ) );
+          child[i].reset( new Tree( in, nodes, ignoreNodeID ) );
         }
       }
     }
@@ -234,7 +234,7 @@ namespace ran_forest
       if ( 0 < num ) {
         child.resize( num );
         for ( int i=0; i<num; i++ ) {
-          child[i].reset( new Tree( in, nodes ) );
+          child[i].reset( new Tree( in, nodes, ignoreNodeID ) );
         }
       }
       END_WITH( in );
