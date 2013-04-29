@@ -12,7 +12,7 @@ namespace ran_forest
     int dim; // dimension of feature vectors
     std::vector<size_t> roots; // nodeID of roots
     std::vector<std::vector<size_t> > child; // children IDs for every node
-    std::vector<kernel<dataType>::splitter> judger; // judgers of every node
+    std::vector<kernel<dataType>::splitter> judge; // judges of every node
 
     // training datapoints IDs for every node. currently only valid
     // for *leaf* nodes
@@ -54,7 +54,7 @@ namespace ran_forest
   public:
     
     // constructor 0: default constructor
-    Forest() : dim(0), roots(), child(), judger(), store() {}
+    Forest() : dim(0), roots(), child(), judge(), store() {}
 
     // constructor 1: reading constructor
 
@@ -78,20 +78,77 @@ namespace ran_forest
       {
         root = child.size();
         child.emplace_back();
-        judger.emplace_back();
+        judge.emplace_back();
         store.emplace_back();
       }
 
+      worklist.push_back( std::make_pair( root,
+                                          typename kernel<dataType>::State( &idx[0],
+                                                                            idx.size(),
+                                                                            options ) ) );
+      std::vector<int> label( dataPoints.size() );
+
+
       while ( !worklist.empty() ) {
         size_t nodeId = fetch<order>(worklist).first;
-        typename kernel<dataType>::State &state = fetch<order>(worklist).second;
+        typename kernel<dataType>::State state = fetch<order>(worklist).second;
+        pop<order>( worklist );
         
         // try split
-        ElectionStatus status = kernel<dataType>::ElectSplitter( dataPoints, dim, state, judger[nodeID] );
-        
+        ElectionStatus status = kernel<dataType>::ElectSplitter( dataPoints, dim, state, judge[nodeID] );
+        int maxLabel = -1;
         if ( SUCCESS == status ) {
-          
+          // calculate branch label
+          for ( size_t i=0; i<state.len; i++ ) {
+            label[state.idx[i]] = judge[nodeID]( dataPoints[state.idx[i]] );
+            if ( label[state.idx[i]] > maxLabel ) {
+              maxLabel = label[state.idx[i]];
+            }
+          }
+
+          // in place counting sort (partition)
+          std::vector<size_t> count( maxLabel + 1, 0 );
+          for ( size_t i=0; i<state.len; i++ ) count[label[state.idx[i]]]++;
+          std::vector<size_t> curpos( maxLabel + 1, 0 );
+          for ( int k=1; k<=maxLabel; k++ ) curpos[k] = curpos[k-1] + count[k-1];
+          std::vector<size_t> partition( maxLabel + 2, 0 );
+          for ( int k=1; k<=maxLabel; k++ ) partition[k] = curpos[k];
+          partition[maxLabel+1] = state.len;
+
+          for ( int k=0; k<=maxLabel; k++ ) {
+            int i = curpos[k];
+            while ( i < partition[k+1] ) {
+              int k1 = label[state.idx[i]];
+              if ( k1 != k ) {
+                j = curpos[k1]++;
+                size_t tmp = state.idx[i];
+                state.idx[i] = state.idx[j];
+                state.idx[j] = tmp;
+              } else {
+                i++;
+              }
+            }
+          }
+
+          // split
+#pragma   omp critical
+          {
+            for ( int k=0; k<=maxLabel; k++ ) {
+              size_t id = child.size();
+              child.emplace_back();
+              judge.emplace_back();
+              store.emplace_back();
+              child[nodeID].push_back( id );
+              worklist.push_back( std::make_pair( id,
+                                                  typename kernelType::State( state.idx + partition[k],
+                                                                              partition[k+1] - partition[k],
+                                                                              state ) ) );
+            }
+          }
         } else {
+          for ( size_t i=0; i<state.len; i++ ) {
+            store[nodeID].push_back( state.idx[i] );
+          }
         }
                                     
       }

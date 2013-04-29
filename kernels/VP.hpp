@@ -9,6 +9,8 @@ namespace ran_forest
   public:
     typedef BinaryOnDistance<dataType> splitter;
 
+    static const int branches;
+
 
     // 1. Options 
     struct Options
@@ -40,6 +42,13 @@ namespace ran_forest
       
       State( size_t *i, size_t l, const State& other )
         : idx(i), len(l), depth( other.depth + 1 ) {}
+
+      State( State&& other )
+      {
+        idx = other.idx;
+        l = other.l;
+        depth = other.depth;
+      }
     };
 
 
