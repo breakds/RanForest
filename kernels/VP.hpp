@@ -1,4 +1,5 @@
 #pragma once
+#include "define.hpp"
 
 namespace ran_forest
 {
@@ -14,10 +15,10 @@ namespace ran_forest
     {
       // stop criteria
       int maxDepth;
-      int stopNum;
+      size_t stopNum;
       dataType converge;
       // other
-      int numHypo;
+      size_t numHypo;
       
       Options() : maxDepth(-1), numHypo(10), stopNum(5), converge(0) {}
     };
@@ -44,11 +45,20 @@ namespace ran_forest
 
     // 3. Generate Candidate
     template <typename feature_t>
-    static inline splitter ElectSplitter( const std::vector<feature_t>& dataPoints,
-                                          int dim,
-                                          State& state )
+    static inline ElectionStatus ElectSplitter( const std::vector<feature_t>& dataPoints,
+                                                int dim,
+                                                State& state,
+                                                splitter& judger )
     {
-      splitter judger;
+
+      if ( state.len < options.stopNum ) {
+        return NODE_SIZE_LIMIT_REACHED;
+      }
+
+      if ( options.maxDepth == state.depth ) {
+        return MAX_DEPTH_REACHED;
+      }
+      
       std::vector<size_t> vpid = rndgen::randperm( state.len, options.numHypo ); // TODO: size_t of randperm
       double bestScore = -1.0;
       double th = 0.0;
@@ -60,8 +70,7 @@ namespace ran_forest
         }
         double maxDist = *std::max_element( distances.begin(), distances.end() );
         if ( maxDist < options.converge ) {
-          partition[0] = -3;
-          return partition;
+          return CONVERGED;
         }
         // get median
         std::nth_element( distances.begin(), 
@@ -86,6 +95,7 @@ namespace ran_forest
 
       judger.th = th;
       
+      return SUCCESS;
     }
 
   };

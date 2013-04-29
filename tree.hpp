@@ -87,10 +87,12 @@ namespace ran_forest
         typename kernel<dataType>::State &state = fetch<order>(worklist).second;
         
         // try split
-        judger[nodeId] = std::move( kernel<dataType>::ElectSplitter( dataPoints,
-                                                                     dim,
-                                                                     state ) );
+        ElectionStatus status = kernel<dataType>::ElectSplitter( dataPoints, dim, state, judger[nodeID] );
         
+        if ( SUCCESS == status ) {
+          
+        } else {
+        }
                                     
       }
       
