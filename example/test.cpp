@@ -62,45 +62,21 @@ int main()
     idx[i] = i;
   }
 
-  typename SimpleKernel<std::vector<float>, BinaryOnAxis>::Options options;
-
   
-  options.dim = dim;
-  options.converge = 0.1;
-  options.stopNum = 10;
+  VP<float>::Options options;
+  options.converge = 0.01;
+  
+
+  Forest<float,VP> forest;
+  forest.grow( 1, features, dim, options );
 
 
-  // Tree<float,BinaryOnAxis> tree;
-  // tree.grow<SimpleKernel>( features, idx, nodes, options );
-
-  Forest<float,BinaryOnAxis> forest;
-  forest.grow<SimpleKernel>( 10, features, options, 0.5 );
-
-
-  int leaves = 0;
   int count = 0;
-  for ( auto& node : forest ) {
-    if ( 0 < node.store.size() ) {
-      leaves++;
-      int c = node.store[0] / perClass;
-      for ( auto& ele : node.store ) {
-        if ( c != (ele / perClass) ) {
-          count--;
-          break;
-        }
-      }
-      count++;
-    }
-  }
-  Info( "%d/%d pass", count, leaves );
-  
-
-  count = 0;
   for ( int i=0; i<K*perClass; i++ ) {
-    std::vector<int> nodeIDs = forest.query( features[i] );
-    for ( int& nodeID : nodeIDs ) {
-      for ( auto& ele : forest[nodeID].store ) {
-        if ( ele == i ) {
+    std::vector<size_t> nodeIDs = forest.query( features[i] );
+    for ( size_t& nodeID : nodeIDs ) {
+      for ( auto& ele : forest.getStore( nodeID ) ) {
+        if ( ele == static_cast<size_t>( i ) ) {
           count++;
           break;
         }

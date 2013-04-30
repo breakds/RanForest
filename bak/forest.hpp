@@ -12,7 +12,7 @@
 #include <type_traits>
 #include "LLPack/algorithms/random.hpp"
 #include "LLPack/algorithms/list.hpp"
-#include "Aux/Bipartite.hpp"
+#include "aux/Bipartite.hpp"
 #include "tree.hpp"
 
 namespace ran_forest
