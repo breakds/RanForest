@@ -66,8 +66,8 @@ int main()
 
   
   VP<float>::Options options;
-  options.converge = 1.0;
-  
+  options.converge = 5.0;
+  options.proportion = 0.5;
 
   Forest<float,VP> forest0;
   forest0.grow( numTrees, features, dim, options );
@@ -102,6 +102,9 @@ int main()
   }
   Info( "%d/%d pass", count, K * perClass * numTrees );
 
+  Bipartite graph = forest.batchQuery( features );
+  TMeanShell<float> shell( dim );
+  shell.Clustering( features, graph );
   
   
   return 0;

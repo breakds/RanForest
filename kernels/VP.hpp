@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include "LLPack/algorithms/random.hpp"
-#include "define.hpp"
+#include "../tree/define.hpp"
 #include "../splitters/BinaryOnDistance.hpp"
 
 namespace ran_forest

@@ -16,7 +16,8 @@
 #include <deque>
 #include <functional>
 #include <cstring>
-#include "kernels/VP.hpp"
+#include "../kernels/VP.hpp"
+#include "../aux/Bipartite.hpp"
 
 
 namespace ran_forest
@@ -391,19 +392,26 @@ namespace ran_forest
     }
 
     template <typename feature_t>
-    std::vector<std::vector<size_t> > batchQuery( const std::vector<feature_t> &dataPoints ) const
+    Bipartite batchQuery( const std::vector<feature_t> &dataPoints ) const
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
-      if ( dataPoints[0].size() != dim ) {
+      if ( static_cast<int>( dataPoints[0].size() ) != dim ) {
         Error( "RanForest: dimension does not match." );
         exit( -1 );
       }
-      std::vector< std::vector<size_t> > re( dataPoints.size() );
+      Bipartite graph( dataPoints.size(), numNodes() );
+      double wt = 1.0 / numTrees();
+
+      ProgressBar progressbar;
+      progressbar.reset( dataPoints.size() );
       for ( size_t i=0; i<dataPoints.size(); i++ ) {
-        re[i].swap( query( dataPoints[i] ) );
+        for ( const size_t& nodeID : query( dataPoints[i] ) ) {
+          graph.add( i, nodeID, wt );
+        }
+        progressbar.update( i+1, "batched query" );
       }
-      return re;
+      return graph;
     }
 
 
@@ -478,7 +486,7 @@ namespace ran_forest
       }
       return re;
     }
-
+    
     inline size_t numNodes() const
     {
       return child.size();
