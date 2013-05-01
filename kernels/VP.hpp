@@ -115,7 +115,7 @@ namespace ran_forest
       for ( int j=0; j<dim; j++ ) {
         judger.vantage[j] = dataPoints[selected][j];
       }
-      
+
       return SUCCESS;
     }
 

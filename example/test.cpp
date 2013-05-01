@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <random>
 #include <vector>
+#include "LLPack/utils/extio.hpp"
 #include "../RanForest.hpp"
 
 using namespace ran_forest;
@@ -31,6 +32,7 @@ public:
 
 int main()
 {
+  int numTrees = 10;
   int K = 3;
   int perClass = 500;
   int dim = 50;
@@ -68,9 +70,18 @@ int main()
   
 
   Forest<float,VP> forest;
-  forest.grow( 1, features, dim, options );
+  forest.grow( numTrees, features, dim, options );
 
+  // test statistics
+  Info( "leaves: %lu", forest.numLeaves() );
+  Info( "nodes: %lu", forest.numNodes() );
+  int depth = forest.depth();
+  Info( "depth: %d", depth );
+  for ( int lv=0; lv<depth+1; lv++ ) {
+    Info( "level %03d: %lu", lv, forest.levelSize( lv ) );
+  }
 
+  
   int count = 0;
   for ( int i=0; i<K*perClass; i++ ) {
     std::vector<size_t> nodeIDs = forest.query( features[i] );
@@ -83,7 +94,7 @@ int main()
       }
     }
   }
-  Info( "%d/%d pass", count, K * perClass );
+  Info( "%d/%d pass", count, K * perClass * numTrees );
 
   
   

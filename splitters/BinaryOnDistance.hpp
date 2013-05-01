@@ -15,6 +15,17 @@ namespace ran_forest
     double th;
     std::vector<dataType> vantage;
 
+    // The default constructor
+    BinaryOnDistance() : th(0.0), vantage() {}
+
+    // The move assignment, will be used in tree construction
+    const BinaryOnDistance<dataType>& operator==( BinaryOnDistance&& other )
+    {
+      th = other.th;
+      vantage.swap( other );
+      return *this;
+    }
+
     inline void write( FILE *out ) const
     {
       fwrite( &th, sizeof(double), 1, out );
