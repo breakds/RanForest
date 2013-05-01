@@ -269,8 +269,12 @@ namespace ran_forest
       
       roots.resize(n);
       dim = -1;
+
+      ProgressBar progressbar;
+      progressbar.reset( n );
       for ( int i=0; i<n; i++ ) {
         readTree( dir, i );
+        progressbar.update( i+1, "Reading Forest" );
       }
     }
 

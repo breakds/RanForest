@@ -33,8 +33,8 @@ public:
 int main()
 {
   int numTrees = 10;
-  int K = 3;
-  int perClass = 500;
+  int K = 10;
+  int perClass = 5000;
   int dim = 50;
   float stddev = 0.05;
   std::vector<std::vector<float> > centers(K);
@@ -66,7 +66,7 @@ int main()
 
   
   VP<float>::Options options;
-  options.converge = 0.01;
+  options.converge = 1.0;
   
 
   Forest<float,VP> forest0;

@@ -23,15 +23,15 @@ namespace ran_forest
     vector< vector< pair< int, double > > > b_to_a;
 
   public:
-    Bipartite( int numA, int numB )
+    Bipartite( size_t numA, size_t numB )
     {
       a_to_b.resize( numA );
-      for ( int i=0; i<numA; i++ ) {
+      for ( size_t i=0; i<numA; i++ ) {
         a_to_b[i].clear();
       }
 
       b_to_a.resize( numB );
-      for ( int i=0; i<numB; i++ ) {
+      for ( size_t i=0; i<numB; i++ ) {
         b_to_a[i].clear();
       }
     }
