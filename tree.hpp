@@ -89,7 +89,7 @@ namespace ran_forest
     }
     
   public:
-
+    
     // the default constructor
     Forest() : dim(0), roots(), child(), judge(), store() {}
 
@@ -241,8 +241,27 @@ namespace ran_forest
     }
 
 
+    // +-------------------------------------------------------------------------------
+    // Input and Output Operations
 
-    /* ---------- Queries ---------- */
+    void write( std::string dir ) const
+    {
+      system( strf( "mkdir -p %s", dir.c_str() ).c_str() );
+      system( strf( "rm -rf %s/*", dir.c_str() ).c_str() );
+      
+    }
+
+    void writeTree( std::string dir, int treeID ) const
+    {
+      WITH_OPEN( in, strf( "%s/tree.%d", dir.c_str(), i ).c_str(), "w" );
+      
+      END_WITH( in );
+    }
+
+
+
+    // +-------------------------------------------------------------------------------
+    // Query Related Operations
     template <typename feature_t>
     size_t queryTree( const feature_t& p, int treeID ) const
     {
@@ -272,6 +291,10 @@ namespace ran_forest
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
+      if ( dataPoints[0].size() != dim ) {
+        Error( "RanForest: dimension does not match." );
+        exit( -1 );
+      }
       std::vector< std::vector<size_t> > re( dataPoints.size() );
       for ( size_t i=0; i<dataPoints.size(); i++ ) {
         re[i].swap( query( dataPoints[i] ) );
@@ -324,7 +347,7 @@ namespace ran_forest
     inline size_t numLeaves() const
     {
       size_t count = 0; 
-      for ( auto& ele : child ) count += ele.empty() ? 0 : 1;
+      for ( auto& ele : child ) count += ele.empty() ? 1 : 0;
       return count;
     }
 
@@ -333,12 +356,23 @@ namespace ran_forest
     {
       size_t count = 0;
       for ( size_t i=0; i<child.size(); i++ ) {
-        // TODO: mysterious pheno
-        if ( level[i] == lv || ( level[i] < lv && child[i].empty() ) ) {
+        if ( ( level[i] == lv ) || ( level[i] < lv && child[i].empty() ) ) {
           count++;
         }
       }
       return count;
+    }
+
+    // Return all the nodes that are at the depth of @param lv
+    inline std::vector<size_t> collectLevel( int lv ) const
+    {
+      std::vector<size_t> re;
+      for ( size_t i=0; i<child.size(); i++ ) {
+        if ( ( level[i] == lv ) || ( level[i] < lv && child[i].empty() ) ) {
+          re.push_back( i );
+        }
+      }
+      return re;
     }
 
     inline size_t numNodes() const
@@ -349,6 +383,11 @@ namespace ran_forest
     inline int numTrees() const
     {
       return static_cast<int>( roots.size() );
+    }
+
+    inline size_t treeRoot( int treeID )
+    {
+      return roots[treeID];
     }
 
     

@@ -80,8 +80,11 @@ int main()
   for ( int lv=0; lv<depth+1; lv++ ) {
     Info( "level %03d: %lu", lv, forest.levelSize( lv ) );
   }
-
   
+  for ( int i=0; i<forest.numTrees(); i++ ) {
+    Info( "root[%d] = %lu", i, forest.treeRoot( i ) );
+  }
+
   int count = 0;
   for ( int i=0; i<K*perClass; i++ ) {
     std::vector<size_t> nodeIDs = forest.query( features[i] );
