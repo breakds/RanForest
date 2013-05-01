@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <deque>
 #include <functional>
+#include <cstring>
 #include "kernels/VP.hpp"
 
 
@@ -244,24 +245,123 @@ namespace ran_forest
     // +-------------------------------------------------------------------------------
     // Input and Output Operations
 
+  public:
     void write( std::string dir ) const
     {
       system( strf( "mkdir -p %s", dir.c_str() ).c_str() );
       system( strf( "rm -rf %s/*", dir.c_str() ).c_str() );
-      
+      for ( int treeID=0; treeID<numTrees(); treeID++ ) {
+        writeTree( dir, treeID );
+      }
     }
 
+    Forest ( std::string dir )
+    {
+      // find the number of trees needed to be read
+      int n = 0;
+      do {
+        if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
+          n++;
+        } else {
+          break;
+        }
+      } while (true);
+      
+      roots.resize(n);
+      dim = -1;
+      for ( int i=0; i<n; i++ ) {
+        readTree( dir, i );
+      }
+    }
+
+  private:
+    
+    // Put a sign at the end of a binary file
+    static void seal( FILE* out )
+    {
+      char ch[4] = "END";
+      fwrite( ch, sizeof(char), 4, out );
+    }
+    
+    // Check whether a correct sign is present 
+    static bool unseal( FILE* in )
+    {
+      char ch[4];
+      fread( ch, sizeof(char), 4, in );
+      return 0 == strcmp( ch, "END" );
+    }
+
+    
     void writeTree( std::string dir, int treeID ) const
     {
-      WITH_OPEN( in, strf( "%s/tree.%d", dir.c_str(), i ).c_str(), "w" );
-      
-      END_WITH( in );
+      WITH_OPEN( out, strf( "%s/tree.%d", dir.c_str(), treeID ).c_str(), "wb" );
+      fwrite( &dim, sizeof(int), 1, out );
+      writeNode( out, roots[treeID] );
+      seal( out );
+      END_WITH( out );
     }
 
+    void writeNode( FILE* out, size_t nodeID ) const
+    {
+      int len = static_cast<int>( child[nodeID].size() );
+      fwrite( &len, sizeof(int), 1, out );
+      if ( 0 == len ) {
+        writeVector( out, store[nodeID] );
+      } else {
+        judge[nodeID].write( out );
+      }
+      for ( int i=0; i<len; i++ ) {
+        writeNode( out, child[nodeID][i] );
+      }
+    }
 
+    void readTree( std::string dir, int treeID )
+    {
+      WITH_OPEN( in, strf( "%s/tree.%d", dir.c_str(), treeID ).c_str(), "rb" );
+      int tmp = 0;
+      fread( &tmp, sizeof(int), 1, in );
+      if ( -1 == dim ) {
+        dim = tmp;
+      } else if ( dim != tmp ) {
+        Error( "RanForest: dimension doesn't agree across trees." );
+        exit( -1 );
+      }
+      roots[treeID] = child.size();
+      child.emplace_back();
+      judge.emplace_back();
+      level.emplace_back( 0 );
+      store.emplace_back();
+      readNode( in, roots[treeID] );
+      if ( !unseal( in ) ) {
+        Error( "RanForest: unseal() failed, might be due to wrong forest data." );
+        exit( -1 );
+      }
+      END_WITH( in );
+    }
+    
+    void readNode( FILE* in, size_t nodeID ) 
+    {
+      int len = 0;
+      fread( &len, sizeof(int), 1, in );
+      if ( 0 == len ) {
+        readVector( in, store[nodeID] );
+      } else {
+        judge[nodeID].read( in );
+      }
+      for ( int i=0; i<len; i++ ) {
+        size_t newNode = child.size();
+        child[nodeID].push_back( newNode );
+        child.emplace_back();
+        judge.emplace_back();
+        store.emplace_back();
+        level.emplace_back( level[nodeID] + 1 );
+        readNode( in, newNode );
+      }
+    }
 
     // +-------------------------------------------------------------------------------
     // Query Related Operations
+  public:
     template <typename feature_t>
     size_t queryTree( const feature_t& p, int treeID ) const
     {

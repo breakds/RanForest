@@ -69,8 +69,11 @@ int main()
   options.converge = 0.01;
   
 
-  Forest<float,VP> forest;
-  forest.grow( numTrees, features, dim, options );
+  Forest<float,VP> forest0;
+  forest0.grow( numTrees, features, dim, options );
+  forest0.write( "forest" );
+
+  Forest<float,VP> forest( "forest" );
 
   // test statistics
   Info( "leaves: %lu", forest.numLeaves() );
