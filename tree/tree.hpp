@@ -424,12 +424,13 @@ namespace ran_forest
       progressbar.reset( dataPoints.size() * 2 );
       std::vector<std::vector<size_t> > re( dataPoints.size() );
 
+      size_t count = 0;
 #     pragma omp parallel for      
       for ( size_t i=0; i<dataPoints.size(); i++ ) {
         re[i] =  std::move( query( dataPoints[i], lv ) );
 #       pragma omp critical
         {
-          progressbar.update( i+1, "batched query" );
+          progressbar.update( ++count, "batched query" );
         }
       }
       
