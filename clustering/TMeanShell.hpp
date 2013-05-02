@@ -180,6 +180,7 @@ namespace ran_forest {
               
       for ( int iter=0; iter<options.maxIter; iter++ ) {
         
+
         bimap.clear();
         
         Info( "TMeans iter %d", iter );
@@ -207,6 +208,8 @@ namespace ran_forest {
 
         CenterMeans( centers, feat, bimap );
 
+
+
         // Calculate Energy
         double energy = 0.0;
 #       pragma omp parallel for reduction(+ : energy)
@@ -220,6 +223,7 @@ namespace ran_forest {
             }
           }
         }
+        
         
         if ( 0 <iter && fabs(lastEnergy-energy) < options.converge ) {
           break;

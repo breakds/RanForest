@@ -180,10 +180,8 @@ namespace ran_forest
         
         if ( SUCCESS == status ) {
           // assign newJudge
-#         pragma omp critical
-          {
-            judge[nodeID] = std::move( newJudge );
-          }
+          judge[nodeID] = std::move( newJudge );
+
           // calculate branch label
           int maxLabel = -1;
           for ( size_t i=0; i<state.len; i++ ) {
@@ -192,10 +190,20 @@ namespace ran_forest
               maxLabel = label[state.idx[i]];
             }
           }
+          
+          if ( 0 == maxLabel ) continue;
 
           // in place counting sort (partition)
           std::vector<size_t> count( maxLabel + 1, 0 );
           for ( size_t i=0; i<state.len; i++ ) count[label[state.idx[i]]]++;
+          bool split = true;
+          for ( int k=0; k<=maxLabel; k++ ) {
+            if ( 0 == count[k] ) { 
+              split = false;
+              break;
+            }
+          }
+          if ( ! split ) continue;
           std::vector<size_t> curpos( maxLabel + 1, 0 );
           for ( int k=1; k<=maxLabel; k++ ) curpos[k] = curpos[k-1] + count[k-1];
           std::vector<size_t> partition( maxLabel + 2, 0 );
@@ -258,7 +266,17 @@ namespace ran_forest
 
     Forest ( std::string dir )
     {
-      // find the number of trees needed to be read
+      read( dir );
+    }
+    
+    void read( std::string dir )
+    {
+      roots.clear();
+      child.clear();
+      judge.clear();
+      level.clear();
+      store.clear();
+
       int n = 0;
       do {
         if ( probeFile( strf( "%s/tree.%d", dir.c_str(), n ) ) ) {
@@ -368,31 +386,31 @@ namespace ran_forest
     // Query Related Operations
   public:
     template <typename feature_t>
-    size_t queryTree( const feature_t& p, int treeID ) const
+    size_t queryTree( const feature_t& p, int treeID, int lv = -1 ) const
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
       size_t i = roots[treeID];
-      while ( !child[i].empty() ) {
+      while ( (!child[i].empty()) && ( level[i] != lv ) ) {
         i = child[i][judge[i](p)];
       }
       return i;
     }
-
+    
     template <typename feature_t>
-    std::vector<size_t> query( const feature_t& p ) const
+    std::vector<size_t> query( const feature_t& p, int lv = -1 ) const
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
       std::vector<size_t> re( roots.size() );
       for ( size_t i=0; i<roots.size(); i++ ) {
-        re[i] = queryTree( p, i );
+        re[i] = queryTree( p, i, lv );
       }
       return re;
     }
 
     template <typename feature_t>
-    Bipartite batchQuery( const std::vector<feature_t> &dataPoints ) const
+    Bipartite batchQuery( const std::vector<feature_t> &dataPoints, int lv = -1 ) const
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
@@ -406,7 +424,7 @@ namespace ran_forest
       ProgressBar progressbar;
       progressbar.reset( dataPoints.size() );
       for ( size_t i=0; i<dataPoints.size(); i++ ) {
-        for ( const size_t& nodeID : query( dataPoints[i] ) ) {
+        for ( const size_t& nodeID : query( dataPoints[i], lv ) ) {
           graph.add( i, nodeID, wt );
         }
         progressbar.update( i+1, "batched query" );
@@ -533,6 +551,17 @@ namespace ran_forest
         }
         return internal_fun( nodeID, results );
       }
+    }
+
+    void Summary() const
+    {
+      printf( "----------------------------------------\n" );
+      printf( "Forest Summary:\n" );
+      Info( "%d trees", numTrees() );
+      Info( "%lu nodes", numNodes() );
+      Info( "%lu leaves", numLeaves() );
+      Info( "%d levels", depth() );
+      printf( "----------------------------------------\n" );
     }
   };
   

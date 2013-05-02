@@ -85,7 +85,9 @@ namespace ran_forest
         for ( size_t i=0; i<state.len; i++ ) {
           distances[i] = algebra::dist_l1( vp, dataPoints[state.idx[i]], dim );
         }
+        
         double maxDist = *std::max_element( distances.begin(), distances.end() );
+        
         if ( maxDist < options.converge ) {
           return CONVERGED;
         }
