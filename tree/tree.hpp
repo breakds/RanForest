@@ -418,16 +418,27 @@ namespace ran_forest
         Error( "RanForest: dimension does not match." );
         exit( -1 );
       }
-      Bipartite graph( dataPoints.size(), numNodes() );
       double wt = 1.0 / numTrees();
 
       ProgressBar progressbar;
-      progressbar.reset( dataPoints.size() );
+      progressbar.reset( dataPoints.size() * 2 );
+      std::vector<std::vector<size_t> > re( dataPoints.size() );
+
+#     pragma omp parallel for      
       for ( size_t i=0; i<dataPoints.size(); i++ ) {
-        for ( const size_t& nodeID : query( dataPoints[i], lv ) ) {
+        re[i] =  std::move( query( dataPoints[i], lv ) );
+#       pragma omp critical
+        {
+          progressbar.update( i+1, "batched query" );
+        }
+      }
+      
+      Bipartite graph( dataPoints.size(), numNodes() );
+      for ( size_t i=0; i<dataPoints.size(); i++ ) {
+        for ( const size_t& nodeID : re[i] ) {
           graph.add( i, nodeID, wt );
         }
-        progressbar.update( i+1, "batched query" );
+        progressbar.update( dataPoints.size() + i + 1, "batched query" );
       }
       return graph;
     }
