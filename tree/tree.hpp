@@ -100,7 +100,8 @@ namespace ran_forest
     void grow( int n,
                const std::vector<feature_t>& dataPoints,
                int dataDim,
-               typename kernel<dataType>::Options options )
+               typename kernel<dataType>::Options options,
+               bool silent = false )
     {
 
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
@@ -134,7 +135,9 @@ namespace ran_forest
         roots[i] = seed( dataPoints, idx[i], options );
 #       pragma omp critical
         {
-          progressbar.update( ++complete, "Forest Construction" );
+          if ( !silent ) {
+            progressbar.update( ++complete, "Forest Construction" );
+          }
         }
       }
     }

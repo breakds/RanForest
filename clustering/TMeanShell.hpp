@@ -162,7 +162,8 @@ namespace ran_forest {
 
     template <typename feature_t, template <typename T = feature_t, typename... restArgs> class container>
     void Clustering( const container<feature_t> &feat,
-                     Bipartite& n_to_l )
+                     Bipartite& n_to_l,
+                     bool silent = false )
     {
       size_t N = n_to_l.sizeA();
       size_t L = n_to_l.sizeB();
@@ -182,8 +183,10 @@ namespace ran_forest {
         
 
         bimap.clear();
-        
-        Info( "TMeans iter %d", iter );
+
+        if ( !silent ) {
+          Info( "TMeans iter %d", iter );
+        }
         // pick centers
 #       pragma omp parallel for
         for ( size_t n=0; n<N; n++ ) {
@@ -230,8 +233,10 @@ namespace ran_forest {
         }
         
         lastEnergy = energy;
-        
-        printf( "Energy: %.5lf\n", energy );
+
+        if ( !silent ) {
+          printf( "Energy: %.5lf\n", energy );
+        }
         
       } // end for iter
 
