@@ -23,6 +23,9 @@ namespace ran_forest
     vector< vector< pair< size_t, double > > > b_to_a;
 
   public:
+
+    Bipartite() : a_to_b(), b_to_a() {}
+    
     Bipartite( size_t numA, size_t numB )
     {
       a_to_b.resize( numA );
@@ -68,7 +71,22 @@ namespace ran_forest
       END_WITH( in );
     }
 
-    void write( std::string filename )
+
+    void resize( size_t numA, size_t numB )
+    {
+      a_to_b.resize( numA );
+      for ( size_t i=0; i<numA; i++ ) {
+        a_to_b[i].clear();
+      }
+
+      b_to_a.resize( numB );
+      for ( size_t i=0; i<numB; i++ ) {
+        b_to_a[i].clear();
+      }
+    }
+
+
+    void write( std::string filename ) const
     {
       WITH_OPEN( out, filename.c_str(), "w" );
       size_t numA = sizeA();

@@ -67,8 +67,8 @@ namespace ran_forest {
       Options() : maxIter(20), replicate(10), converge(1e-5), wtBandwidth(100.0) {}
     } options;
 
-
     TMeanShell( int dimension ) : dim(dimension), centers(), options() {}
+
 
     // +-------------------------------------------------------------------------------
     // Input and Output
