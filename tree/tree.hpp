@@ -413,7 +413,7 @@ namespace ran_forest
     }
 
     template <typename feature_t>
-    Bipartite batchQuery( const std::vector<feature_t> &dataPoints, int lv = -1 ) const
+    Bipartite batchQuery( const std::vector<feature_t> &dataPoints, int lv = -1, bool silent = false ) const
     {
       static_assert( std::is_same<typename ElementOf<feature_t>::type, dataType>::value,
                      "element of feature_t should have the same type as dataType." );
@@ -433,7 +433,9 @@ namespace ran_forest
         re[i] =  std::move( query( dataPoints[i], lv ) );
 #       pragma omp critical
         {
-          progressbar.update( ++count, "batched query" );
+	  if ( !silent ) {
+	    progressbar.update( ++count, "batched query" );
+	  }
         }
       }
       
@@ -442,7 +444,9 @@ namespace ran_forest
         for ( const size_t& nodeID : re[i] ) {
           graph.add( i, nodeID, wt );
         }
-        progressbar.update( dataPoints.size() + i + 1, "batched query" );
+	if ( !silent ) {
+	  progressbar.update( dataPoints.size() + i + 1, "batched query" );
+	}
       }
       return graph;
     }
