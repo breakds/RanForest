@@ -1,3 +1,51 @@
+// This file is part of RanForest, a lightweight C++ template library
+// for random forest.
+//
+// By BreakDS <breakds@cs.wisc.edu> - http://www.unlicense.org/ (public domain)
+// 
+// This file implements the Vantage Point Tree Kernel (packaged as
+// class VP).
+//
+//
+// 
+// +--- Each kernel class should ---+
+//
+// 1. have a template paramter for the type of the elements of feature
+// vectors that can be handled, called dataType
+// ----------------------------------------------------------------------
+// 2. specify the splitter that is going to be used and typedef it as
+// @typename splitter.
+// ----------------------------------------------------------------------
+// 3. have a struct named Options. Member variables are options and
+// parameters that are used in the ElectSplitter function (described
+// below)
+// ----------------------------------------------------------------------
+// 4. have a class named State. State should contain at least 3 public
+// members that describe the state of the current node being splitted:
+// - size_t* idx, the array of all the indices currently held at this
+//   node
+// - size_t len, the length of the array @var idx
+// - int depth, the depth of the current node, 0 for root
+// ----------------------------------------------------------------------
+// 5. have a static function named ElectSplitter. It will generate
+// hypothesis for split and pick the best one based on certain
+// criteria, as specified by the implementor. This function takes 5
+// parameters:
+// - a vector of feature_t that contains all the feature vectors used
+//   to build the tree.
+// - an integer (int) specifies the dimension of each feature vector
+// - a @typename State variable ref that describe the current node,
+//   see above for details
+// - a @typename splitter variable ref that will be used to hold the
+//   elected splitter if the election trial is successful
+// - a @typename Option variable ref that provides the options
+// 
+// This function returns a ElectionStatus variable. It will be SUCCESS
+// if the election trial is successful, or others as defined in
+// tree/define.hpp.
+
+
+
 #pragma once
 
 #include <algorithm>
@@ -7,16 +55,15 @@
 
 namespace ran_forest
 {
+  // 1. template paramter 
   template <typename dataType>
   class VP
   {
   public:
+    // 2. splitter
     typedef BinaryOnDistance<dataType> splitter;
 
-    static const int branches;
-
-
-    // 1. Options 
+    // 3. Options
     struct Options
     {
       // stop criteria
@@ -32,7 +79,7 @@ namespace ran_forest
     };
 
     
-    // 2. State
+    // 4. State
     class State
     {
     public:
@@ -58,7 +105,7 @@ namespace ran_forest
     };
 
 
-    // 3. Generate Candidate
+    // 5. Candidate Generator and Elector
     template <typename feature_t>
     static inline ElectionStatus ElectSplitter( const std::vector<feature_t>& dataPoints,
                                                 int dim,

@@ -1,3 +1,31 @@
+// This file is part of RanForest, a lightweight C++ template library
+// for random forest.
+//
+// By BreakDS <breakds@cs.wisc.edu> - http://www.unlicense.org/ (public domain)
+// 
+// This file implements the class BinaryOnDistance, which is a binary
+// tree splitter.
+// 
+//
+// +--- Description on splitter ---+
+//
+// Each tree node should be associated with a splitter (judge). A
+// splitter is a functor (class) that accepts a feature vector, and
+// returns an integer (int) indicating which branch (child) the
+// feature vector should go to.
+//
+// Each splitter should have a template parameter dataType which is
+// the type of the elements of feature vectors that can be handled,
+// and also
+//
+// 1. a static constant string contains the name of the splitter
+// 2. a default constructor that takes no argument
+// 3. an operator== for equality comparison
+// 4. function write() and read() for serialization
+// 5. operator() as it is a functor
+
+
+
 #pragma once
 
 #include <string>
